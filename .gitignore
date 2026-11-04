@@ -1,0 +1,24 @@
+# 构建产物
+[Bb]in/
+[Oo]bj/
+[Pp]ublish/
+
+# 分发产物（安装包 / 单文件 exe，体积大，建议走 GitHub Releases）
+dist/
+
+# IDE / 用户配置
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.DotSettings.user
+
+# 系统文件
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 日志与临时文件
+*.log
+*.tmp
