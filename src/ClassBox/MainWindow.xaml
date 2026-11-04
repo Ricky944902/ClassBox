@@ -1,0 +1,156 @@
+<Window x:Class="ClassBox.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Class Box"
+        Width="1160" Height="740"
+        MinWidth="940" MinHeight="620"
+        WindowStartupLocation="CenterScreen"
+        Topmost="True"
+        Background="{DynamicResource AppBackgroundBrush}"
+        Foreground="{DynamicResource AppTextPrimaryBrush}"
+        FontFamily="{DynamicResource AppFontFamily}"
+        Icon="Assets/ClassBox.ico"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="52"
+                            ResizeBorderThickness="6"
+                            GlassFrameThickness="0"
+                            CornerRadius="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- ==== 侧边导航 ==== -->
+        <Border Grid.Column="0" Background="{DynamicResource AppLayerBrush}"
+                BorderThickness="0,0,1,0" BorderBrush="{DynamicResource AppStrokeBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="52" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <Border Width="26" Height="26" CornerRadius="6" Background="{DynamicResource AppAccentBrush}">
+                        <TextBlock Text="&#xE7B8;" FontFamily="{DynamicResource IconFontFamily}" FontSize="14"
+                                   Foreground="{DynamicResource AppAccentForegroundBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <TextBlock Text="Class Box" Margin="10,0,0,0" VerticalAlignment="Center"
+                               FontSize="15" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                </StackPanel>
+
+                <ListBox x:Name="NavList"
+                         Grid.Row="1"
+                         Margin="10,4,10,10"
+                         ItemsSource="{Binding NavItems}"
+                         SelectedItem="{Binding SelectedNavItem, Mode=TwoWay}"
+                         ItemContainerStyle="{DynamicResource FluentListBoxItemStyle}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Height="38">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="{Binding Glyph}"
+                                           FontFamily="{DynamicResource IconFontFamily}" FontSize="15"
+                                           VerticalAlignment="Center" Margin="2,0,12,0"
+                                           Foreground="{DynamicResource AppTextPrimaryBrush}" />
+
+                                <TextBlock Grid.Column="1" Text="{Binding Title}" FontSize="13.5"
+                                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                           Foreground="{DynamicResource AppTextPrimaryBrush}" />
+
+                                <TextBlock Grid.Column="2" Text="{Binding Badge}" FontSize="10.5"
+                                           VerticalAlignment="Center" Margin="6,0,2,0"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <StackPanel Grid.Row="2" Margin="12,0,12,14">
+                    <Border Height="1" Background="{DynamicResource AppStrokeBrush}" Margin="0,0,0,10" />
+                    <Button Style="{DynamicResource SubtleButtonStyle}" Height="34"
+                            Command="{Binding ToggleThemeCommand}" ToolTip="切换深浅色主题">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                            <TextBlock x:Name="ThemeGlyph" Text="&#xE706;" FontFamily="{DynamicResource IconFontFamily}"
+                                       FontSize="13" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                            <TextBlock Text="切换主题" Margin="10,0,0,0" FontSize="12.5" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        </StackPanel>
+                    </Button>
+                    <TextBlock Text="{Binding VersionText}" Margin="10,8,0,0" FontSize="11"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <!-- ==== 主区域 ==== -->
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="52" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- 标题栏 -->
+            <Grid Grid.Row="0" Background="Transparent">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="{Binding CurrentPageTitle}" FontSize="14" FontWeight="SemiBold"
+                               Foreground="{DynamicResource AppTextPrimaryBrush}" VerticalAlignment="Center" />
+                    <Border Width="1" Height="14" Margin="12,0" Background="{DynamicResource AppStrokeBrush}"
+                            VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding CurrentPageSubtitle}" FontSize="12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" VerticalAlignment="Center" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{DynamicResource TitleBarButtonStyle}" Click="Ball_Click" ToolTip="缩小为悬浮球（保持置顶）">
+                        <Border Width="10" Height="10" CornerRadius="5" BorderThickness="1.4"
+                                BorderBrush="{DynamicResource AppTextPrimaryBrush}" />
+                    </Button>
+                    <Button Style="{DynamicResource TitleBarButtonStyle}" Click="Minimize_Click" ToolTip="最小化">
+                        <TextBlock Text="&#xE921;" FontFamily="{DynamicResource IconFontFamily}" FontSize="10"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </Button>
+                    <Button Style="{DynamicResource TitleBarButtonStyle}" Click="Maximize_Click" ToolTip="最大化">
+                        <TextBlock x:Name="MaximizeGlyph" Text="&#xE922;" FontFamily="{DynamicResource IconFontFamily}"
+                                   FontSize="10" Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </Button>
+                    <Button Style="{DynamicResource TitleBarButtonStyle}" Click="Close_Click" ToolTip="关闭"
+                            x:Name="CloseButton">
+                        <TextBlock Text="&#xE8BB;" FontFamily="{DynamicResource IconFontFamily}" FontSize="10"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- 页面容器 -->
+            <Border Grid.Row="1" Background="{DynamicResource AppBackgroundBrush}">
+                <ContentControl Content="{Binding CurrentPage}" Margin="0" />
+            </Border>
+        </Grid>
+    </Grid>
+</Window>

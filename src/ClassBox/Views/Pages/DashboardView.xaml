@@ -1,0 +1,137 @@
+<UserControl x:Class="ClassBox.Views.Pages.DashboardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <BooleanToVisibilityConverter x:Key="BoolToVis" />
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="0">
+        <StackPanel Margin="28,4,28,28">
+
+            <!-- Hero -->
+            <Border CornerRadius="14" Padding="26,22" BorderThickness="1"
+                    BorderBrush="{DynamicResource AppStrokeBrush}">
+                <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                        <GradientStop Color="#2A4CC2FF" Offset="0" />
+                        <GradientStop Color="#0A4CC2FF" Offset="1" />
+                    </LinearGradientBrush>
+                </Border.Background>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="Class Box 工作台" FontSize="22" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <TextBlock Text="窗口置顶、人像监测等能力均以插件形式接入，可随时启用或停用。"
+                                   FontSize="12.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    </StackPanel>
+
+                    <Border Grid.Column="1" Width="54" Height="54" CornerRadius="27" VerticalAlignment="Center"
+                            Background="{DynamicResource AppAccentBrush}" Opacity="0.92">
+                        <TextBlock Text="&#xE7B8;" FontFamily="{DynamicResource IconFontFamily}" FontSize="24"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppAccentForegroundBrush}" />
+                    </Border>
+                </Grid>
+            </Border>
+
+            <!-- 统计 -->
+            <UniformGrid Columns="3" Margin="0,14,0,0">
+                <Border Style="{DynamicResource CardStyle}" Margin="0,0,5,0">
+                    <StackPanel>
+                        <TextBlock Text="插件总数" FontSize="11.5" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        <TextBlock Text="{Binding PluginCount}" FontSize="26" FontWeight="SemiBold" Margin="0,6,0,0"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{DynamicResource CardStyle}" Margin="5,0">
+                    <StackPanel>
+                        <TextBlock Text="已启用" FontSize="11.5" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        <TextBlock Text="{Binding EnabledPluginCount}" FontSize="26" FontWeight="SemiBold" Margin="0,6,0,0"
+                                   Foreground="{DynamicResource AppSuccessBrush}" />
+                    </StackPanel>
+                </Border>
+                <Border Style="{DynamicResource CardStyle}" Margin="5,0,0,0">
+                    <StackPanel>
+                        <TextBlock Text="运行中" FontSize="11.5" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        <TextBlock Text="{Binding RunningPluginCount}" FontSize="26" FontWeight="SemiBold" Margin="0,6,0,0"
+                                   Foreground="{DynamicResource AppAccentBrush}" />
+                    </StackPanel>
+                </Border>
+            </UniformGrid>
+
+            <!-- 快捷操作 -->
+            <TextBlock Text="快捷操作" Style="{DynamicResource SectionHeaderStyle}" Margin="2,24,0,10" />
+            <WrapPanel>
+                <Button Content="最小化全部窗口" Style="{DynamicResource FluentButtonStyle}"
+                        Command="{Binding MinimizeAllCommand}" Margin="0,0,10,10" />
+                <Button Content="打开插件目录" Style="{DynamicResource FluentButtonStyle}"
+                        Command="{Binding OpenPluginsFolderCommand}" Margin="0,0,10,10" />
+                <Button Content="打开数据目录" Style="{DynamicResource FluentButtonStyle}"
+                        Command="{Binding OpenDataFolderCommand}" Margin="0,0,10,10" />
+                <Button Content="打开日志目录" Style="{DynamicResource FluentButtonStyle}"
+                        Command="{Binding OpenLogFolderCommand}" Margin="0,0,10,10" />
+            </WrapPanel>
+
+            <!-- 插件概览 -->
+            <TextBlock Text="插件概览" Style="{DynamicResource SectionHeaderStyle}" Margin="2,18,0,10" />
+
+            <ItemsControl ItemsSource="{Binding Plugins}">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border Style="{DynamicResource SubtleCardStyle}" Margin="0,0,0,8">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <Border Grid.Column="0" Width="36" Height="36" CornerRadius="9"
+                                        Background="{DynamicResource AppLayerAltBrush}" Margin="0,0,14,0">
+                                    <TextBlock Text="{Binding Metadata.Glyph}" FontFamily="{DynamicResource IconFontFamily}"
+                                               FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource AppAccentBrush}" />
+                                </Border>
+
+                                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding Metadata.Name}" FontSize="13.5" FontWeight="SemiBold"
+                                               Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                                    <TextBlock Text="{Binding Metadata.Description}" FontSize="11.5" Margin="0,3,0,0"
+                                               TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                </StackPanel>
+
+                                <Border Grid.Column="2" CornerRadius="10" Padding="10,4" VerticalAlignment="Center">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="Background" Value="{DynamicResource AppLayerAltBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRunning}" Value="True">
+                                                    <Setter Property="Background" Value="#1F6CCB5F" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding HasError}" Value="True">
+                                                    <Setter Property="Background" Value="#33FF99A4" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <TextBlock Text="{Binding StatusText}" FontSize="11"
+                                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

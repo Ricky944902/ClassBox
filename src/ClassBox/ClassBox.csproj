@@ -1,0 +1,86 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>ClassBox</AssemblyName>
+    <RootNamespace>ClassBox</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\ClassBox.ico</ApplicationIcon>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- 程序集与产品信息 -->
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
+    <Company>Class Box Team</Company>
+    <Product>Class Box</Product>
+    <Copyright>Copyright © 2026 Class Box Team</Copyright>
+    <Description>Class Box —— 一切皆插件的现代 Windows 桌面效率工具箱</Description>
+    <NeutralLanguage>zh-Hans</NeutralLanguage>
+
+    <!-- 无第三方 NuGet 依赖：仅使用 BCL + WPF + 内置 Windows SDK 投影 -->
+
+    <!-- 发布相关默认值：实际发布参数由 build.ps1 显式传入 -->
+    <SelfContained Condition="'$(SelfContained)' == ''">true</SelfContained>
+    <PublishSingleFile Condition="'$(PublishSingleFile)' == ''">true</PublishSingleFile>
+    <PublishReadyToRun Condition="'$(PublishReadyToRun)' == ''">false</PublishReadyToRun>
+    <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
+    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+    <SatelliteResourceLanguages>zh-Hans;en</SatelliteResourceLanguages>
+    <ErrorOnDuplicatePublishOutputFiles>false</ErrorOnDuplicatePublishOutputFiles>
+    <DebugType>embedded</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClassBox.Abstractions\ClassBox.Abstractions.csproj" />
+    <!-- 插件不参与编译期引用：仅保证构建顺序，产物由下方 Target 复制到 Plugins 目录 -->
+    <ProjectReference Include="..\ClassBox.Plugins.WindowTopmost\ClassBox.Plugins.WindowTopmost.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\ClassBox.Plugins.PresenceMonitor\ClassBox.Plugins.PresenceMonitor.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+    <ProjectReference Include="..\ClassBox.SamplePlugin\ClassBox.SamplePlugin.csproj"
+                      ReferenceOutputAssembly="false" Private="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Assets\ClassBox.ico" />
+  </ItemGroup>
+
+  <!-- 把插件 DLL 复制到输出目录的 Plugins 子目录（构建与发布两条路径） -->
+  <PropertyGroup>
+    <PluginSourceRoot>$(MSBuildThisFileDirectory)..\</PluginSourceRoot>
+    <PluginBinaryDir>$(PluginSourceRoot)$(PluginProjectName)\bin\$(Configuration)\$(TargetFramework)\</PluginBinaryDir>
+  </PropertyGroup>
+
+  <Target Name="CopyPluginAssembliesToOutput" AfterTargets="Build">
+    <ItemGroup>
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.dll" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.pdb" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.dll" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.pdb" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.dll" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginBinaries)" DestinationFolder="$(OutDir)Plugins" SkipUnchangedFiles="true"
+          Condition="Exists('%(PluginBinaries.Identity)')" ContinueOnError="true" />
+    <Message Importance="high" Text="Class Box: 已同步插件到 $(OutDir)Plugins" />
+  </Target>
+
+  <Target Name="CopyPluginAssembliesToPublish" AfterTargets="Publish">
+    <ItemGroup>
+      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.dll" />
+      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.dll" />
+      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.dll" />
+    </ItemGroup>
+    <Copy SourceFiles="@(PluginPublishBinaries)" DestinationFolder="$(PublishDir)Plugins" SkipUnchangedFiles="true"
+          Condition="Exists('%(PluginPublishBinaries.Identity)')" ContinueOnError="true" />
+    <Message Importance="high" Text="Class Box: 已同步插件到 $(PublishDir)Plugins" />
+  </Target>
+
+</Project>

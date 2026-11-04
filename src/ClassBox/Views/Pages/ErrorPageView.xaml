@@ -1,0 +1,14 @@
+<UserControl x:Class="ClassBox.Views.Pages.ErrorPageView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid Margin="32">
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="520">
+            <TextBlock Text="&#xE7BA;" FontFamily="{DynamicResource IconFontFamily}" FontSize="34"
+                       HorizontalAlignment="Center" Foreground="{DynamicResource AppDangerBrush}" />
+            <TextBlock Text="页面加载失败" FontSize="17" FontWeight="SemiBold" Margin="0,14,0,0"
+                       HorizontalAlignment="Center" Foreground="{DynamicResource AppTextPrimaryBrush}" />
+            <TextBlock x:Name="MessageText" Text="" FontSize="12.5" TextWrapping="Wrap" Margin="0,8,0,0"
+                       TextAlignment="Center" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

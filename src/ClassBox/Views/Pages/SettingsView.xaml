@@ -1,0 +1,94 @@
+<UserControl x:Class="ClassBox.Views.Pages.SettingsView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="28,4,28,28" MaxWidth="860">
+
+            <!-- 外观 -->
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="外观" Style="{DynamicResource SectionHeaderStyle}" />
+                    <TextBlock Text="选择浅色或深色主题，插件页面会自动跟随。"
+                               FontSize="12" Margin="0,8,0,12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Content="浅色主题" Style="{DynamicResource FluentButtonStyle}" Margin="0,0,10,0"
+                                Command="{Binding SetThemeCommand}" CommandParameter="light" />
+                        <Button Content="深色主题" Style="{DynamicResource AccentButtonStyle}"
+                                Command="{Binding SetThemeCommand}" CommandParameter="dark" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 日志 -->
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="日志" Style="{DynamicResource SectionHeaderStyle}" />
+                    <TextBlock Text="日志按天写入本地文件，保留最近 7 天。"
+                               FontSize="12" Margin="0,8,0,12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="最低级别" FontSize="12.5" VerticalAlignment="Center" Margin="0,0,12,0"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <ComboBox Width="160" Style="{DynamicResource FluentComboBoxStyle}"
+                                  ItemsSource="{Binding LogLevels}"
+                                  SelectedItem="{Binding SelectedLogLevel, Mode=TwoWay}" />
+                        <Button Content="打开日志目录" Style="{DynamicResource SubtleButtonStyle}" Margin="14,0,0,0"
+                                Command="{Binding OpenLogFolderCommand}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- 目录 -->
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="数据与插件目录" Style="{DynamicResource SectionHeaderStyle}" />
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="数据目录" FontSize="12"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding DataRoot}" FontSize="12" TextTrimming="CharacterEllipsis"
+                                   VerticalAlignment="Center" Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <Button Grid.Column="2" Content="打开" Style="{DynamicResource SubtleButtonStyle}"
+                                Command="{Binding OpenDataFolderCommand}" />
+                    </Grid>
+
+                    <Grid Margin="0,10,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="90" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="插件目录" FontSize="12"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Column="1" Text="{Binding PluginsDirectory}" FontSize="12"
+                                   TextTrimming="CharacterEllipsis" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <Button Grid.Column="2" Content="打开" Style="{DynamicResource SubtleButtonStyle}"
+                                Command="{Binding OpenPluginsFolderCommand}" />
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- 关于 -->
+            <Border Style="{DynamicResource CardStyle}">
+                <StackPanel>
+                    <TextBlock Text="关于" Style="{DynamicResource SectionHeaderStyle}" />
+                    <TextBlock Text="Class Box · 插件化桌面效率工具" FontSize="13" Margin="0,10,0,0"
+                               Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    <TextBlock Text="{Binding VersionText, StringFormat=版本 {0}}" FontSize="12" Margin="0,6,0,0"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBlock Text=".NET 8 · WPF · 自包含单文件发布" FontSize="12" Margin="0,4,0,0"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>
