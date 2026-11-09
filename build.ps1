@@ -133,7 +133,7 @@ Write-Host "ISCC: $iscc"
 Write-Step "构建安装包"
 Push-Location (Join-Path $root "installer")
 try {
-    & $iscc "/DMyAppVersion=1.1.0" "/DMySourceDir=$publishDir" "/O$distRoot" "ClassBox.iss"
+    & $iscc "/DMyAppVersion=1.3.0" "/DMySourceDir=$publishDir" "/O$distRoot" "ClassBox.iss"
     if ($LASTEXITCODE -ne 0) { throw "Inno Setup 编译失败，退出码 $LASTEXITCODE" }
 }
 finally {

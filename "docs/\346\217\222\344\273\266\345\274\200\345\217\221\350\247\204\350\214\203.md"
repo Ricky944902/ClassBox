@@ -1,0 +1,214 @@
+# Class Box 插件开发规范（供代码生成严格遵循）
+
+本规范用于批量新增 Class Box 插件。每个插件必须是一个可独立编译的 WPF 类库项目，编译产物 DLL 放入宿主 `Plugins` 目录即可被加载。**必须逐字遵循本规范，不得引入第三方 NuGet 包，不得修改主程序与 Abstractions 目录下的任何文件。**
+
+## 1. 目录与命名
+
+- 项目目录：`D:\ClassBox\src\ClassBox.Plugins.<Name>\`（`<Name>` 为 PascalCase，如 `HttpFileServer`）
+- 项目文件名：`ClassBox.Plugins.<Name>.csproj`，`AssemblyName` 与 `RootNamespace` 均为 `ClassBox.Plugins.<Name>`
+- 插件类文件名：`<Name>Plugin.cs`，类名 `<Name>Plugin`，继承 `PluginBase`
+- 视图放 `Views\<Name>View.xaml` + `.xaml.cs`；纯代码视图可直接 `<Name>Page.cs`
+- 不要在项目内放置 App.xaml、MainWindow、Program.cs 等应用入口文件
+- 不要调用 `dotnet new`；直接手写文件
+
+## 2. csproj 模板（原样使用，只改 Name）
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>ClassBox.Plugins.HttpFileServer</AssemblyName>
+    <RootNamespace>ClassBox.Plugins.HttpFileServer</RootNamespace>
+    <Version>1.0.0</Version>
+    <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ClassBox.Abstractions\ClassBox.Abstractions.csproj">
+      <Private>false</Private>
+      <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+  </ItemGroup>
+
+</Project>
+```
+
+注意：`Private=false` 且 `ExcludeAssets=runtime`，绝不能把 ClassBox.Abstractions.dll 复制到插件输出目录。
+
+## 3. 插件类模板
+
+```csharp
+using ClassBox.Abstractions.Plugins;
+using ClassBox.Abstractions.Services;
+
+namespace ClassBox.Plugins.Xxx;
+
+public sealed class XxxPlugin : PluginBase
+{
+    public override PluginMetadata Metadata { get; } = new()
+    {
+        Id = "classbox.plugin.xxx",
+        Name = "中文插件名",
+        Description = "一句话说明它解决什么问题。",
+        Author = "Class Box Team",
+        Version = new Version(1, 0, 0),
+        Category = "网络工具",   // 见第 6 节分类枚举
+        Glyph = "\uE8B7",        // Segoe MDL2 字形
+        IsBuiltIn = false
+    };
+
+    public override int SortOrder => 300;
+
+    protected override Task OnInitializeAsync(CancellationToken cancellationToken)
+    {
+        Context.Navigation.RegisterPage(new PluginPageDescriptor
+        {
+            PageId = "classbox.page.xxx",
+            Title = Metadata.Name,
+            Description = Metadata.Description,
+            Glyph = Metadata.Glyph,
+            Order = SortOrder,
+            ViewFactory = () => new XxxView(this)
+        });
+        return Task.CompletedTask;
+    }
+
+    protected override Task OnStartAsync(CancellationToken cancellationToken) { /* 启动后台任务 */ return Task.CompletedTask; }
+
+    protected override Task OnStopAsync(CancellationToken cancellationToken) { /* 取消后台任务、释放句柄 */ return Task.CompletedTask; }
+}
+```
+
+## 4. 宿主服务（通过 `Context` 使用）
+
+`Context` 是 `IPluginContext`，仅有以下成员，**不要臆造其它成员**：
+
+| 成员 | 类型 | 用途 |
+|---|---|---|
+| `Context.PluginId` | string | 插件 Id |
+| `Context.DataDirectory` | string | 插件专属数据目录（已创建），临时文件写这里 |
+| `Context.Configuration` | IConfigStore | `Load<T>(key, defaultValue)` / `TryLoad<T>(key, out v)` / `Save<T>(key, value)` / `Delete(key)` / `Directory`，T 必须是 class |
+| `Context.Logger` | IAppLogger | `Debug/Info/Warn(msg, scope)`、`Error(msg, ex, scope)`、`MinimumLevel`、`EntryWritten` 事件 |
+| `Context.Windows` | IWindowService | `EnumerateWindows()`、`SetTopmost`、`Minimize`、`Restore`、`MinimizeAll()`、`ShowOnlyProcess(name)`、`IsAdmin`、`EmbedWindow` 等（Win32 操作只走这里） |
+| `Context.Alerts` | ISideAlertService | `Show(new SideAlertRequest { Title, Message, Glyph, AutoCloseSeconds, AccentColor, IsUrgent })`，非模态提示 |
+| `Context.Navigation` | IPluginNavigation | `RegisterPage`、`RemovePage`、`NavigateTo(pageId)` |
+| `Context.IsDarkTheme` | bool | 当前主题 |
+
+**禁止**：`MessageBox.Show`（阻塞宿主）、直接 P/Invoke 窗口操作（应用 `Context.Windows`）、引用 `ClassBox` 主程序程序集。
+
+## 5. MVVM 与命令（插件内自带，不引用主程序）
+
+Abstractions 只提供 `ClassBox.Abstractions.Mvvm.ObservableObject`（含 `SetProperty`、`OnPropertyChanged`）。`RelayCommand` **不在** Abstractions 中，每个需要命令的插件必须自带一份 `Infrastructure\RelayCommand.cs`：
+
+```csharp
+using System.Windows.Input;
+
+namespace ClassBox.Plugins.Xxx.Infrastructure;
+
+public sealed class RelayCommand : ICommand
+{
+    private readonly Action<object?> _execute;
+    private readonly Func<object?, bool>? _canExecute;
+
+    public RelayCommand(Action execute, Func<bool>? canExecute = null)
+        : this(_ => execute(), canExecute is null ? null : _ => canExecute()) { }
+
+    public RelayCommand(Action<object?> execute, Func<object?, bool>? canExecute = null)
+    {
+        _execute = execute;
+        _canExecute = canExecute;
+    }
+
+    public event EventHandler? CanExecuteChanged;
+    public bool CanExecute(object? parameter) => _canExecute?.Invoke(parameter) ?? true;
+    public void Execute(object? parameter) => _execute(parameter);
+    public void RaiseCanExecuteChanged() => CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+}
+
+public sealed class AsyncRelayCommand : ICommand
+{
+    private readonly Func<Task> _execute;
+    private bool _running;
+
+    public AsyncRelayCommand(Func<Task> execute) => _execute = execute;
+
+    public event EventHandler? CanExecuteChanged;
+    public bool CanExecute(object? parameter) => !_running;
+
+    public async void Execute(object? parameter)
+    {
+        if (_running) return;
+        _running = true;
+        CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        try { await _execute(); }
+        finally
+        {
+            _running = false;
+            CanExecuteChanged?.Invoke(this, EventArgs.Empty);
+        }
+    }
+}
+```
+
+## 6. 界面规范
+
+- 页面根元素：`<UserControl ... Background="Transparent">`，外层 `<Grid Margin="28,4,28,20">`
+- 必须使用宿主主题样式（`DynamicResource`），禁止硬编码 `Background="White"`、`Foreground="Black"`：
+
+| 用途 | 可用键 |
+|---|---|
+| 样式 | `TitleTextStyle` `SubtitleTextStyle` `SectionHeaderStyle` `IconTextStyle` `CardStyle` `SubtleCardStyle` `FluentButtonStyle` `AccentButtonStyle` `DangerButtonStyle` `SubtleButtonStyle` `FluentTextBoxStyle` `SwitchToggleStyle` `FluentCheckBoxStyle` `FluentComboBoxStyle` `FluentListBoxItemStyle` |
+| 画刷 | `AppBackgroundBrush` `AppLayerBrush` `AppLayerAltBrush` `AppStrokeBrush` `AppTextPrimaryBrush` `AppTextSecondaryBrush` `AppAccentBrush` `AppAccentHoverBrush` `AppDangerBrush` `AppSuccessBrush` `AppWarningBrush` `AppHoverBrush` `AppSelectedBrush` |
+| 字体 | `AppFontFamily` `IconFontFamily` |
+
+- 图标用 `FontFamily="{DynamicResource IconFontFamily}"` + Segoe MDL2 字形字符
+- 全中文界面，文案简洁；不要用 Emoji
+- XAML 与 code-behind 的类名/命名空间必须严格对应；插件 XAML 不得设置 `x:Class` 到不存在的类
+
+## 7. 硬性技术约束（违反即编译/运行失败）
+
+1. **零第三方依赖**：只能用 BCL + WPF + Windows SDK 投影（`net8.0-windows10.0.19041.0`）。禁止 NuGet 包（含 WebView2、Newtonsoft、CommunityToolkit 等）。
+2. **HTTP 服务不要用 `HttpListener`**：绑定非 localhost 前缀需要管理员权限或 netsh urlacl。请用 `TcpListener` 自写最小 HTTP 服务器（解析请求行与头部、返回 200/404、支持 Range 可选）。`TcpListener` 绑定 `IPAddress.Any` 无需管理员权限。
+3. **UDP 广播/组播**需要 `SocketOptionName.ReuseAddress` 并设置 `EnableBroadcast`。
+4. **异步与 UI 线程**：后台任务用 `Task.Run` + `CancellationTokenSource`，更新 UI 用 `Dispatcher.Invoke/BeginInvoke`；`OnStopAsync` 中必须取消令牌、关闭监听器/套接字（`Stop()`/`Dispose()`），否则宿主退出会挂。
+5. **所有网络/IO 调用必须 try-catch**，异常写 `Context.Logger.Error`，不要抛出到 UI 线程导致宿主崩溃。
+6. `Nullable` 已开启，避免 `CS86xx` 警告变成错误；不确定的变量显式标注可空。
+7. 文件写入只能写到 `Context.DataDirectory` 或用户通过对话框明确选择的路径（推荐 `Microsoft.Win32.OpenFileDialog` / `SaveFileDialog`，属 WPF 内置，可用）。
+8. 不要访问注册表 HKLM（需要管理员）；读取启动项只操作 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`。
+9. 不要包含 `AssemblyInfo.cs`、不要设置 `GenerateAssemblyInfo=false`。
+10. 项目文件夹内不要放 `bin`/`obj` 之外的大文件。
+
+## 8. 质量红线
+
+- **必须是真功能**：每个按钮点下去都有真实行为，禁止"待实现""示例数据""TODO"占位。
+- 启动/停止必须可重复：禁用插件后再次启用不报错、不重复注册页面。
+- 长耗时操作要有进度或状态提示，按钮执行期间禁用（用 AsyncRelayCommand）。
+- 列表类页面提供刷新按钮，空态给出可读提示文字。
+- 完整实现元数据描述、页面标题、状态栏文案，体现产品完成度。
+
+## 9. 自检与交付
+
+能用命令行时必须执行以下命令验证并保证 0 错误：
+
+```
+dotnet build "D:\ClassBox\src\ClassBox.Plugins.<Name>\ClassBox.Plugins.<Name>.csproj" -c Release
+```
+
+若无法执行命令，则严格对照上面的模板逐项自查（命名空间、using、x:Class、资源键、无第三方包）。
+
+汇报格式（必须包含，便于宿主验收）：
+
+```
+插件：<中文名>（ClassBox.Plugins.<Name>）
+目录：D:\ClassBox\src\ClassBox.Plugins.<Name>\
+编译：成功 / 失败（失败附首个错误）
+功能：<3-5 条真实功能点，说明用户怎么用>
+文件：<文件清单>
+```

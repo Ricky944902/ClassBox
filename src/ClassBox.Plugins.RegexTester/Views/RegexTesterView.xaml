@@ -1,0 +1,156 @@
+<UserControl x:Class="ClassBox.Plugins.RegexTester.Views.RegexTesterView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid Margin="28,4,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="正则测试器" Style="{DynamicResource SectionHeaderStyle}" />
+            <TextBlock x:Name="StatusText" Text="填写正则与待测文本后点击“开始测试”，匹配带 2 秒超时保护。"
+                       FontSize="11.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                       Foreground="{DynamicResource AppTextSecondaryBrush}" />
+        </StackPanel>
+
+        <!-- 正则输入区 -->
+        <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Padding="14,12,14,12" Margin="0,0,0,10">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="正则" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="PatternBox" Grid.Column="1" Height="34" Style="{DynamicResource FluentTextBoxStyle}"
+                             FontFamily="Consolas" FontSize="12.5" VerticalContentAlignment="Center"
+                             SpellCheck.IsEnabled="False" />
+                    <Button Grid.Column="2" Content="开始测试" Style="{DynamicResource AccentButtonStyle}"
+                            MinWidth="96" Height="34" Margin="10,0,0,0" Click="Run_Click" />
+                </Grid>
+
+                <WrapPanel Grid.Row="1" Margin="0,10,0,0" Orientation="Horizontal">
+                    <TextBlock Text="模板" VerticalAlignment="Center" Margin="0,0,6,0" FontSize="12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <ComboBox x:Name="TemplateBox" Width="130" Height="30" Margin="0,0,16,0"
+                              Style="{DynamicResource FluentComboBoxStyle}"
+                              SelectionChanged="TemplateBox_SelectionChanged" />
+
+                    <CheckBox x:Name="IgnoreCaseBox" Content="忽略大小写" Margin="0,0,16,0" VerticalAlignment="Center"
+                              Style="{DynamicResource FluentCheckBoxStyle}" Checked="Option_Changed" Unchecked="Option_Changed" />
+                    <CheckBox x:Name="MultilineBox" Content="多行模式 (^ $ 按行)" Margin="0,0,16,0" VerticalAlignment="Center"
+                              Style="{DynamicResource FluentCheckBoxStyle}" Checked="Option_Changed" Unchecked="Option_Changed" />
+
+                    <Button Content="复制全部匹配" Style="{DynamicResource FluentButtonStyle}" MinWidth="110"
+                            Margin="0,0,8,0" Click="CopyMatches_Click" />
+                    <Button Content="清空" Style="{DynamicResource SubtleButtonStyle}" MinWidth="66"
+                            Click="Clear_Click" />
+                </WrapPanel>
+            </Grid>
+        </Border>
+
+        <!-- 待测文本 + 匹配结果 -->
+        <Grid Grid.Row="2" Margin="0,0,0,10">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="1.15*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{DynamicResource CardStyle}" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid Grid.Row="0" Margin="14,10,14,6">
+                        <TextBlock Text="待测文本" FontSize="11.5" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        <TextBlock x:Name="InputStats" HorizontalAlignment="Right" FontSize="11"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    </Grid>
+                    <TextBox x:Name="InputBox" Grid.Row="1" Style="{DynamicResource FluentTextBoxStyle}"
+                             BorderThickness="0" Background="Transparent" Padding="12,0,12,10"
+                             AcceptsReturn="True" AcceptsTab="True" TextWrapping="Wrap"
+                             VerticalScrollBarVisibility="Auto" VerticalContentAlignment="Top"
+                             FontFamily="Consolas" FontSize="12.5" SpellCheck.IsEnabled="False"
+                             TextChanged="InputBox_TextChanged" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{DynamicResource CardStyle}" Padding="8">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="6,4,6,8">
+                        <TextBlock x:Name="MatchSummary" Text="匹配结果" FontSize="11.5" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                        <TextBlock x:Name="GroupSummary" HorizontalAlignment="Right" FontSize="11"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                    </Grid>
+
+                    <DataGrid x:Name="MatchesGrid" Grid.Row="1" AutoGenerateColumns="False" IsReadOnly="True"
+                              CanUserAddRows="False" CanUserDeleteRows="False" CanUserResizeRows="False"
+                              SelectionMode="Single" SelectionUnit="FullRow" HeadersVisibility="Column"
+                              GridLinesVisibility="Horizontal" RowHeight="28" FontSize="11.5"
+                              Background="Transparent" BorderThickness="0" RowBackground="Transparent"
+                              HorizontalGridLinesBrush="{DynamicResource AppLayerAltBrush}"
+                              Foreground="{DynamicResource AppTextPrimaryBrush}">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="序号" Binding="{Binding Index}" Width="52" />
+                            <DataGridTextColumn Header="位置" Binding="{Binding PositionText}" Width="132" />
+                            <DataGridTextColumn Header="长度" Binding="{Binding Length}" Width="56" />
+                            <DataGridTextColumn Header="匹配值" Binding="{Binding Value}" Width="1.2*" />
+                            <DataGridTextColumn Header="分组" Binding="{Binding Groups}" Width="1.6*" />
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 替换预览 -->
+        <Border Grid.Row="3" Style="{DynamicResource CardStyle}" Padding="14,12,14,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="替换为" VerticalAlignment="Center" Margin="0,0,8,0" FontSize="12"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="ReplacementBox" Grid.Column="1" Height="32" Style="{DynamicResource FluentTextBoxStyle}"
+                             FontFamily="Consolas" FontSize="12.5" VerticalContentAlignment="Center"
+                             SpellCheck.IsEnabled="False" TextChanged="ReplacementBox_TextChanged" />
+                    <Button Grid.Column="2" Content="复制替换结果" Style="{DynamicResource FluentButtonStyle}"
+                            MinWidth="110" Height="32" Margin="10,0,0,0" Click="CopyReplace_Click" />
+                </Grid>
+
+                <TextBox x:Name="ReplacePreviewBox" Grid.Row="1" Height="86" Margin="0,10,0,0"
+                         Style="{DynamicResource FluentTextBoxStyle}" IsReadOnly="True" AcceptsReturn="True"
+                         TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" FontFamily="Consolas"
+                         FontSize="12" Padding="10,6,10,6" SpellCheck.IsEnabled="False" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

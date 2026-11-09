@@ -1,4 +1,4 @@
----
+﻿---
 AIGC:
     Label: "1"
     ContentProducer: 001191440300708461136T1XGW3
@@ -63,12 +63,33 @@ dotnet publish src\ClassBox\ClassBox.csproj -c Release -r win-x64 `
 
 ```
 dist\
-├─ ClassBox-Setup-1.1.0.exe     # 安装包（约 64 MB，内已含运行时）
+├─ ClassBox-Setup-1.2.0.exe     # 安装包（约 64 MB，内已含运行时）
 └─ app\
    ├─ ClassBox.exe              # 自包含单文件可执行程序（约 69 MB）
-   └─ Plugins\                  # 插件目录
+   └─ Plugins\                  # 插件目录（当前 23 个插件 DLL + 示例插件）
       ├─ ClassBox.Plugins.WindowTopmost.dll
       ├─ ClassBox.Plugins.PresenceMonitor.dll
+      ├─ ClassBox.Plugins.ClassTalk.dll
+      ├─ ClassBox.Plugins.WebBrowser.dll
+      ├─ ClassBox.Plugins.LocalServer.dll
+      ├─ ClassBox.Plugins.PortScanner.dll
+      ├─ ClassBox.Plugins.HashCheck.dll
+      ├─ ClassBox.Plugins.DiskAnalyzer.dll
+      ├─ ClassBox.Plugins.ProcessManager.dll
+      ├─ ClassBox.Plugins.SystemInfo.dll
+      ├─ ClassBox.Plugins.JsonTool.dll
+      ├─ ClassBox.Plugins.EncodeTool.dll
+      ├─ ClassBox.Plugins.RegexTester.dll
+      ├─ ClassBox.Plugins.TextDiff.dll
+      ├─ ClassBox.Plugins.MarkdownPreview.dll
+      ├─ ClassBox.Plugins.PasswordGen.dll
+      ├─ ClassBox.Plugins.UnitConverter.dll
+      ├─ ClassBox.Plugins.ClipboardHistory.dll
+      ├─ ClassBox.Plugins.ScreenshotTool.dll
+      ├─ ClassBox.Plugins.QRCodeTool.dll
+      ├─ ClassBox.Plugins.TodoPlanner.dll
+      ├─ ClassBox.Plugins.NotesPad.dll
+      ├─ ClassBox.Plugins.NetworkToolkit.dll
       └─ ClassBox.SamplePlugin.dll
 ```
 
@@ -78,7 +99,7 @@ dist\
 
 ## 3. 安装与首次运行
 
-1. 运行 `ClassBox-Setup-1.1.0.exe`，按提示安装到 `C:\Program Files\Class Box`。
+1. 运行 `ClassBox-Setup-1.2.0.exe`，按提示安装到 `C:\Program Files\Class Box`。
 2. 程序清单要求**管理员权限**：因为需要向自身目录写入 / 删除 `Plugins` 下的插件 DLL，并支持置顶、嵌入其它进程窗口等操作。启动时会弹出 UAC，请选择“是”。
 3. 首次启动会在 `%APPDATA%\ClassBox` 建立数据目录。
 
@@ -240,4 +261,33 @@ ClassBox\
 - 零第三方 NuGet 依赖：JSON 用 `System.Text.Json`，摄像头用 VfW，MVVM 基类自实现；
 - 目标框架 `net8.0-windows10.0.19041.0`，启用 `PerMonitorV2` DPI 感知；
 - 所有面向用户的文本为中文，源码注释为中文。
+
+---
+
+## 11. 变更记录
+
+### v1.3.0（2026-11-09）
+
+- **ClassTalk 隐藏管理入口**：删除聊天页可见的「管理员」按钮与相关提示文案，普通用户界面不再出现任何管理员相关内容；管理员控制台改为浮层，仅在口令触发后出现。
+- **口令触发控制台**：在聊天输入框发送 `/admin` 即打开控制台（该指令不会作为聊天内容发给他人）；本机已是管理员时直接打开，尚无管理员时先到先得竞选，已被他人持有时给出提示。
+- **加密口令框支持 `/admin`**：聊天页「加密口令」输入框内输入 `/admin` 并确认，即成为当前房间管理员（主机侧本地登记，成员侧经加密通道向主机申请）；口令框本身始终回显房间口令，不影响原口令校验；成为管理员后在该处再次输入 `/admin` 可随时呼出控制台。
+- **局域网会话检测**：新增会话发现能力（UDP 55211 广播 + TTL 清理），登录页实时列出局域网内正在进行的 ClassTalk 会话（会话名、主机、端口、在线人数、是否加密），支持手动刷新、自动刷新开关与一键加入；主机侧随房间启停自动开始/停止公告。
+- **重新打包**：程序与安装包版本号统一为 1.3.0（`ClassBox.exe` 单文件自包含、安装包 `ClassBox-Setup-1.3.0.exe`）。
+
+### v1.2.0（2026-11-09）
+
+- **插件市场成型**：插件总数由 3 个扩充至 23 个，全部以独立 DLL 形式随安装包分发，安装后即可在「插件」页启用。
+- **新增插件**：ClassTalk（局域网加密通讯，由原独立程序移植）、WebBrowser（内置浏览器）、LocalServer（把电脑变成 HTTP 服务器）、PortScanner（端口扫描）、HashCheck（哈希校验）、DiskAnalyzer（磁盘分析）、ProcessManager（进程管理）、SystemInfo（系统信息）、JsonTool（JSON 格式化/校验/转 C# 类）、EncodeTool（编解码工具）、RegexTester（正则测试）、TextDiff（文本对比）、MarkdownPreview（Markdown 预览）、PasswordGen（密码生成）、UnitConverter（单位换算）、ClipboardHistory（剪贴板历史）、ScreenshotTool（截图工具）、QRCodeTool（二维码生成）、TodoPlanner（待办清单）、NotesPad（速记便笺）、NetworkToolkit（网络工具箱）。
+- **主程序**：`ClassBox.csproj` 插件登记改为通配（`..\ClassBox.Plugins.*\*.csproj`），构建后自动把全部插件 DLL 复制到输出目录 `Plugins`，新增插件无需再改主程序工程文件。
+- **重新打包**：程序与安装包版本号统一为 1.2.0（`ClassBox.exe` 单文件自包含、安装包 `ClassBox-Setup-1.2.0.exe`）。
+
+### v1.1.0（2026-11-06）
+
+- 主界面强制置顶与悬浮球（详见第 10 章）；`WindowService.StartTopmostGuard()` 每秒重申 `HWND_TOPMOST`。
+- 自包含单文件发布模式：`SelfContained=true` + `PublishSingleFile=true` + 压缩，目标机器无需安装 .NET 运行时。
+
+### v1.0.0（2026-11-05）
+
+- 首个可分发版本：插件式框架（宿主 + `ClassBox.Abstractions` 契约）、内置「窗口置顶」与「人像监测」插件、Inno Setup 安装包。
+
 *（内容由AI生成，仅供参考）*

@@ -1,0 +1,202 @@
+<UserControl x:Class="ClassBox.Plugins.PortScanner.Views.PortScannerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid Margin="28,4,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题与 Ping -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="端口扫描与连通检测" Style="{DynamicResource SectionHeaderStyle}" />
+                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                    <Ellipse x:Name="StatusDot" Width="8" Height="8" VerticalAlignment="Center"
+                             Fill="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusText" Text="就绪" FontSize="11.5" Margin="8,0,0,0"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                </StackPanel>
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="PingButton" Content="Ping 检测" Style="{DynamicResource FluentButtonStyle}"
+                        MinWidth="96" Margin="0,0,8,0" Click="Ping_Click" />
+                <Button x:Name="CancelButton" Content="取消" Style="{DynamicResource SubtleButtonStyle}"
+                        MinWidth="72" IsEnabled="False" Click="Cancel_Click" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 参数区 -->
+        <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Padding="16" Margin="0,0,0,12">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <TextBlock Grid.Column="0" Text="目标主机" FontSize="12" VerticalAlignment="Center"
+                               Margin="0,0,10,0" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="HostBox" Grid.Column="1" Height="32" Text="127.0.0.1"
+                             Style="{DynamicResource FluentTextBoxStyle}" VerticalContentAlignment="Center" />
+
+                    <TextBlock Grid.Column="2" Text="端口" FontSize="12" VerticalAlignment="Center"
+                               Margin="16,0,10,0" Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="PortsBox" Grid.Column="3" Height="32" Text="1-1024"
+                             Style="{DynamicResource FluentTextBoxStyle}" VerticalContentAlignment="Center" />
+
+                    <Button x:Name="ScanButton" Grid.Column="4" Content="开始扫描" MinWidth="96" Height="32"
+                            Style="{DynamicResource AccentButtonStyle}" Margin="16,0,0,0" Click="Scan_Click" />
+                </Grid>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                    <TextBlock Text="超时(ms)" FontSize="12" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="TimeoutBox" Width="76" Height="32" Text="800"
+                             Style="{DynamicResource FluentTextBoxStyle}" VerticalContentAlignment="Center" />
+
+                    <TextBlock Text="并发数" FontSize="12" VerticalAlignment="Center" Margin="20,0,8,0"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="ConcurrencyBox" Width="60" Height="32" Text="64"
+                             Style="{DynamicResource FluentTextBoxStyle}" VerticalContentAlignment="Center" />
+
+                    <TextBlock Text="常用集合" FontSize="12" VerticalAlignment="Center" Margin="20,0,8,0"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <Button Content="1-1024" Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                            Click="PresetRange_Click" Tag="1-1024" />
+                    <Button Content="1-10000" Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                            Click="PresetRange_Click" Tag="1-10000" />
+                    <Button Content="Web 常用" Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                            Click="PresetRange_Click" Tag="80,443,8000,8080,8081,8443,8888" />
+                    <Button Content="数据库" Style="{DynamicResource SubtleButtonStyle}"
+                            Click="PresetRange_Click" Tag="1433,1521,3306,5432,6379,9200,27017" />
+                </StackPanel>
+
+                <Border Grid.Row="2" CornerRadius="8" Padding="12,9"
+                        Background="{DynamicResource AppLayerAltBrush}">
+                    <StackPanel>
+                        <TextBlock x:Name="HintText" TextWrapping="Wrap" FontSize="11.5" LineHeight="18"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                   Text="端口支持 1-1024、80,443,8080 或 80,8000-8010 混合写法，单次最多 8192 个端口。请仅扫描自己拥有或已获授权的设备。" />
+                        <ProgressBar x:Name="ScanProgress" Height="3" Margin="0,10,0,0" Minimum="0" Maximum="100"
+                                     Visibility="Collapsed" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- Ping 结果条 -->
+        <Border x:Name="PingBar" Grid.Row="2" CornerRadius="8" Padding="14,10" Margin="0,0,0,12"
+                Visibility="Collapsed" Background="{DynamicResource AppLayerAltBrush}">
+            <TextBlock x:Name="PingText" TextWrapping="Wrap" FontSize="12"
+                       Foreground="{DynamicResource AppTextPrimaryBrush}" />
+        </Border>
+
+        <!-- 结果 -->
+        <Border Grid.Row="3" Style="{DynamicResource CardStyle}" Padding="16">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <Grid Grid.Row="0" Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                        <TextBlock Text="扫描结果" FontSize="12.5" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <TextBlock x:Name="SummaryText" Text="· 尚未扫描" FontSize="11.5" Margin="6,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal">
+                        <CheckBox x:Name="OnlyOpenCheck" Content="仅显示开放端口" FontSize="11.5"
+                                  VerticalAlignment="Center" Margin="0,0,12,0" IsChecked="True"
+                                  Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                  Checked="OnlyOpen_Changed" Unchecked="OnlyOpen_Changed" />
+                        <Button Content="导出/复制结果" Style="{DynamicResource SubtleButtonStyle}"
+                                Margin="0,0,8,0" Click="Export_Click" />
+                        <Button Content="清空" Style="{DynamicResource SubtleButtonStyle}" Click="Clear_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <Grid Grid.Row="1" Margin="0,0,0,2">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="86" />
+                        <ColumnDefinition Width="110" />
+                        <ColumnDefinition Width="180" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="端口" FontSize="11"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBlock Grid.Column="1" Text="状态" FontSize="11"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBlock Grid.Column="2" Text="服务名（推断）" FontSize="11"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBlock Grid.Column="3" Text="耗时" FontSize="11"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                </Grid>
+
+                <ListBox x:Name="ResultList" Grid.Row="2" Background="Transparent" BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ItemContainerStyle="{DynamicResource FluentListBoxItemStyle}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,2">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="86" />
+                                    <ColumnDefinition Width="110" />
+                                    <ColumnDefinition Width="180" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Port}" FontSize="11.5"
+                                           Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                                <TextBlock Grid.Column="1" Text="{Binding StateText}" FontSize="11.5"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                <TextBlock Grid.Column="2" Text="{Binding Service}" FontSize="11.5"
+                                           Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                                <TextBlock Grid.Column="3" Text="{Binding ElapsedText}" FontSize="11.5"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock x:Name="EmptyHint" Grid.Row="2" Text="输入目标后点击「开始扫描」，开放端口会列在这里"
+                           FontSize="11.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+
+                <TextBox x:Name="ExportBox" Grid.Row="3" Height="130" Margin="0,10,0,0"
+                         Visibility="Collapsed" IsReadOnly="True" AcceptsReturn="True"
+                         TextWrapping="NoWrap" VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="11.5"
+                         Style="{DynamicResource FluentTextBoxStyle}" />
+            </Grid>
+        </Border>
+    </Grid>
+</UserControl>

@@ -1,0 +1,489 @@
+<UserControl x:Class="ClassBox.Plugins.ClassTalk.Views.ClassTalkView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <UserControl.Resources>
+        <Style x:Key="FieldLabelStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="Margin" Value="0,12,0,6" />
+            <Setter Property="Foreground" Value="{DynamicResource AppTextSecondaryBrush}" />
+        </Style>
+        <Style x:Key="MonoTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource FluentTextBoxStyle}">
+            <Setter Property="FontFamily" Value="Consolas, Microsoft YaHei UI" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="IsReadOnly" Value="True" />
+            <Setter Property="AcceptsReturn" Value="True" />
+            <Setter Property="TextWrapping" Value="NoWrap" />
+            <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+            <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="28,4,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部标题条 -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="ClassTalk 局域网加密交流" Style="{DynamicResource TitleTextStyle}" />
+                <TextBlock x:Name="SubtitleText"
+                           Text="LRNC-1024-AEAD 端到端加密 · 同一局域网内主机建房、成员加入"
+                           Style="{DynamicResource SubtitleTextStyle}" Margin="0,6,0,0" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="SelfTestButton" Content="加密自检"
+                        Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,8,0"
+                        Click="SelfTestButton_Click"
+                        ToolTip="校验 LRNC-1024-AEAD 的已知答案向量、Unicode、回环收发" />
+                <Button x:Name="DisconnectButton" Content="断开"
+                        Style="{DynamicResource DangerButtonStyle}"
+                        IsEnabled="False" Click="DisconnectButton_Click" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 内容区：登录 / 聊天 -->
+        <Grid Grid.Row="1">
+
+            <!-- 登录卡片 -->
+            <Border x:Name="LoginCard" Style="{DynamicResource CardStyle}"
+                    MaxWidth="1000" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.02*" />
+                        <ColumnDefinition Width="18" />
+                        <ColumnDefinition Width="1*" />
+                    </Grid.ColumnDefinitions>
+
+                    <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto"
+                                  HorizontalScrollBarVisibility="Disabled" MaxHeight="560">
+                        <StackPanel Margin="6,0,10,0">
+                        <TextBlock Text="连接聊天室" Style="{DynamicResource SectionHeaderStyle}" />
+                        <TextBlock Text="双方输入同一口令才能解密对方的消息；口令不会在网络上传输。"
+                                   FontSize="11.5" Margin="0,6,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+
+                        <TextBlock Text="你的昵称" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="NickBox" Style="{DynamicResource FluentTextBoxStyle}"
+                                 MaxLength="32" ToolTip="最多 32 个字符" />
+
+                        <TextBlock Text="会话名称（主机模式，留空自动命名）" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="RoomNameBox" Style="{DynamicResource FluentTextBoxStyle}"
+                                 MaxLength="32" ToolTip="会显示在局域网的会话列表里，方便同学识别" />
+
+                        <TextBlock Text="加密口令" Style="{StaticResource FieldLabelStyle}" />
+                        <PasswordBox x:Name="PassBox" Height="34" Padding="10,0" FontSize="13" MaxLength="64"
+                                     VerticalContentAlignment="Center"
+                                     Background="{DynamicResource AppLayerAltBrush}"
+                                     Foreground="{DynamicResource AppTextPrimaryBrush}"
+                                     BorderBrush="{DynamicResource AppStrokeBrush}"
+                                     BorderThickness="1"
+                                     KeyDown="PassBox_KeyDown"
+                                     ToolTip="用于派生 LRNC-1024 主密钥，至少 6 位；同一房间必须一致" />
+
+                        <TextBlock Text="连接模式" Style="{StaticResource FieldLabelStyle}" />
+                        <StackPanel Orientation="Horizontal">
+                            <RadioButton x:Name="ModeHost" Content="主机（创建聊天室）" GroupName="Mode"
+                                         Style="{DynamicResource FluentRadioButtonStyle}"
+                                         IsChecked="True" Checked="Mode_Changed" Margin="0,0,22,0" />
+                            <RadioButton x:Name="ModeJoin" Content="加入（连接主机）" GroupName="Mode"
+                                         Style="{DynamicResource FluentRadioButtonStyle}"
+                                         Checked="Mode_Changed" />
+                        </StackPanel>
+
+                        <Grid Margin="0,4,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="120" />
+                                <ColumnDefinition Width="12" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="端口" Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="PortBox" Style="{DynamicResource FluentTextBoxStyle}" Text="55210" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="主机 IP（加入模式填写）" Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="HostBox" Style="{DynamicResource FluentTextBoxStyle}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Orientation="Horizontal" Margin="0,14,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="本机内网 IP：" FontSize="11.5"
+                                       Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock x:Name="LanIpText" FontSize="11.5" FontWeight="SemiBold"
+                                       Foreground="{DynamicResource AppAccentBrush}"
+                                       VerticalAlignment="Center" />
+                            <Button Content="重新探测" Style="{DynamicResource SubtleButtonStyle}"
+                                    FontSize="11" Padding="8,3" Margin="10,0,0,0"
+                                    Click="RefreshIp_Click" />
+                        </StackPanel>
+
+                        <Button x:Name="ConnectButton" Content="开始连接"
+                                Style="{DynamicResource AccentButtonStyle}" Height="38"
+                                Margin="0,18,0,0" Click="ConnectButton_Click" />
+
+                        <TextBlock x:Name="LoginError" FontSize="11.5" Margin="0,10,0,2"
+                                   TextWrapping="Wrap" Visibility="Collapsed"
+                                   Foreground="{DynamicResource AppDangerBrush}" />
+                        </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- 局域网会话检测 -->
+                    <Grid Grid.Column="2">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Grid.Row="0" Margin="6,0,4,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="局域网会话" Style="{DynamicResource SectionHeaderStyle}" />
+                                <TextBlock x:Name="ScanStatusText" Text="正在扫描同一局域网内的聊天室…"
+                                           FontSize="11" Margin="0,5,0,0" TextWrapping="Wrap"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                            </StackPanel>
+                            <CheckBox x:Name="AutoScanCheck" Grid.Column="1" Content="自动" IsChecked="True"
+                                      Style="{DynamicResource FluentCheckBoxStyle}" FontSize="11"
+                                      VerticalAlignment="Center" Margin="8,0,8,0" Click="AutoScan_Click" />
+                            <Button x:Name="ScanButton" Grid.Column="2" Content="刷新"
+                                    Style="{DynamicResource SubtleButtonStyle}" FontSize="11" Padding="10,3"
+                                    VerticalAlignment="Center" Click="ScanButton_Click" />
+                        </Grid>
+
+                        <Border Grid.Row="1" Style="{DynamicResource SubtleCardStyle}" Padding="6">
+                            <Grid>
+                                <ScrollViewer x:Name="DiscoverScroller" VerticalScrollBarVisibility="Auto">
+                                    <StackPanel x:Name="DiscoverPanel" />
+                                </ScrollViewer>
+                                <TextBlock x:Name="DiscoverEmptyText"
+                                           Text="暂未发现局域网内的会话。让主机先点“开始连接”，且双方需处于同一局域网（同一 Wi-Fi 或同一路由器下）。"
+                                           FontSize="11.5" TextWrapping="Wrap" TextAlignment="Center"
+                                           Margin="16" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                            </Grid>
+                        </Border>
+
+                        <TextBlock Grid.Row="2" FontSize="10.5" Margin="4,8,4,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                   Text="扫描通过 UDP 公告发现正在进行的房间；点“加入”会自动填入该房间地址与端口并连接。" />
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- 聊天面板 -->
+            <Grid x:Name="ChatPanel" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="12" />
+                    <ColumnDefinition Width="272" />
+                </Grid.ColumnDefinitions>
+
+                <Grid Grid.Column="0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Border Grid.Row="0" Style="{DynamicResource SubtleCardStyle}" Padding="8">
+                        <ScrollViewer x:Name="MsgScroller" VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled">
+                            <StackPanel x:Name="MsgPanel" Margin="0,0,4,4" />
+                        </ScrollViewer>
+                    </Border>
+
+                    <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Padding="10" Margin="0,10,0,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <TextBox x:Name="InputBox" Grid.Column="0" Style="{DynamicResource FluentTextBoxStyle}"
+                                     TextWrapping="Wrap" AcceptsReturn="False" MaxHeight="96"
+                                     VerticalContentAlignment="Center" KeyDown="InputBox_KeyDown" />
+
+                            <CheckBox x:Name="PlainCheck" Grid.Column="1" Content="明文发送"
+                                      Style="{DynamicResource FluentCheckBoxStyle}"
+                                      Margin="12,0,12,0" VerticalAlignment="Center"
+                                      ToolTip="勾选后消息不做加密，任何抓包工具都能看到内容" />
+
+                            <Button x:Name="SendButton" Grid.Column="2" Content="发送"
+                                    Style="{DynamicResource AccentButtonStyle}" MinWidth="84"
+                                    Click="SendButton_Click" />
+                        </Grid>
+                    </Border>
+                </Grid>
+
+                <Border Grid.Column="2" Style="{DynamicResource CardStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Grid.Row="0" Orientation="Horizontal">
+                            <TextBlock Text="在线成员" Style="{DynamicResource SectionHeaderStyle}" VerticalAlignment="Center" />
+                            <Border Background="{DynamicResource AppAccentBrush}" CornerRadius="9"
+                                    MinWidth="22" Height="18" Margin="10,0,0,0" Padding="5,0">
+                                <TextBlock x:Name="MemberCountText" Text="0" FontSize="11" FontWeight="SemiBold"
+                                           Foreground="{DynamicResource AppAccentForegroundBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                        </StackPanel>
+
+                        <Border x:Name="PassInfoBorder" Grid.Row="1" Style="{DynamicResource SubtleCardStyle}"
+                                Margin="0,12,0,10" Padding="10">
+                            <StackPanel>
+                                <TextBlock Text="房间口令" FontSize="10.5"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                <PasswordBox x:Name="PassInfoBox" Height="30" Padding="8,0" FontSize="12" MaxLength="64"
+                                             Margin="0,6,0,0" VerticalContentAlignment="Center"
+                                             Background="{DynamicResource AppLayerAltBrush}"
+                                             Foreground="{DynamicResource AppTextPrimaryBrush}"
+                                             BorderBrush="{DynamicResource AppStrokeBrush}"
+                                             BorderThickness="1"
+                                             KeyDown="PassInfoBox_KeyDown"
+                                             ToolTip="当前房间使用的口令；修改后点右侧按钮生效" />
+                                <Button x:Name="PassConfirmButton" Content="确认口令"
+                                        Style="{DynamicResource SubtleButtonStyle}" FontSize="11"
+                                        Padding="10,3" Margin="0,8,0,0" HorizontalAlignment="Left"
+                                        Click="PassConfirm_Click" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border x:Name="RoomInfoBorder" Grid.Row="2" Style="{DynamicResource SubtleCardStyle}"
+                                Margin="0,0,0,10" Padding="10" Cursor="Hand"
+                                Visibility="Collapsed" MouseLeftButtonUp="RoomInfo_Click"
+                                ToolTip="点击复制房间连接信息发到班级群">
+                            <StackPanel>
+                                <TextBlock Text="房间连接信息（点击复制）" FontSize="10.5"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                <TextBlock x:Name="RoomInfoText" FontSize="12" FontWeight="SemiBold"
+                                           Margin="0,5,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Border>
+
+                        <ListBox x:Name="MemberList" Grid.Row="3"
+                                 Background="Transparent" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem" BasedOn="{StaticResource FluentListBoxItemStyle}">
+                                    <Setter Property="Padding" Value="4,6" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Grid.Column="0" Width="26" Height="26" CornerRadius="13"
+                                                Background="{DynamicResource AppAccentBrush}" Opacity="0.9">
+                                            <TextBlock Text="{Binding Initial}" Foreground="{DynamicResource AppAccentForegroundBrush}" FontSize="12"
+                                                       FontWeight="SemiBold" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="10,0,0,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding Nick}" FontSize="12.5" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Text="{Binding RoleText}" FontSize="10.5"
+                                                       Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                                        </StackPanel>
+                                    </Grid>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+
+        <!-- 底部状态栏 -->
+        <TextBlock x:Name="StatusText" Grid.Row="2" Text="未连接"
+                   FontSize="11.5" Margin="2,12,0,0" TextTrimming="CharacterEllipsis"
+                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+
+        <!-- 管理员控制台（浮层） -->
+        <Grid x:Name="AdminLayer" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" Panel.ZIndex="20">
+            <Border Background="{DynamicResource AppBackgroundBrush}" Opacity="0.86" />
+            <Border Style="{DynamicResource CardStyle}" Width="900" MaxHeight="620"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock x:Name="AdminTitleText" Text="控制台"
+                                       Style="{DynamicResource SectionHeaderStyle}" />
+                            <TextBlock x:Name="AdminSubtitleText" FontSize="11.5" Margin="0,5,0,0" TextWrapping="Wrap"
+                                       Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                       Text="选择目标设备后输入命令，命令经加密通道下发并在目标机器执行。" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="关闭" Style="{DynamicResource SubtleButtonStyle}"
+                                VerticalAlignment="Top" Click="AdminClose_Click" />
+                    </Grid>
+
+                    <Grid Grid.Row="1">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="230" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <Border Grid.Column="0" Style="{DynamicResource SubtleCardStyle}">
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="*" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Text="在线设备（可多选）" FontSize="11.5"
+                                           Foreground="{DynamicResource AppTextSecondaryBrush}" Margin="2,0,0,8" />
+
+                                <ListBox x:Name="TargetList" Grid.Row="1" SelectionMode="Multiple"
+                                         Background="Transparent" BorderThickness="0">
+                                    <ListBox.ItemContainerStyle>
+                                        <Style TargetType="ListBoxItem" BasedOn="{StaticResource FluentListBoxItemStyle}">
+                                            <Setter Property="Padding" Value="6,5" />
+                                        </Style>
+                                    </ListBox.ItemContainerStyle>
+                                    <ListBox.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Text="{Binding}" FontSize="12" TextTrimming="CharacterEllipsis" />
+                                        </DataTemplate>
+                                    </ListBox.ItemTemplate>
+                                </ListBox>
+
+                                <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+                                    <Button Content="全选" Style="{DynamicResource SubtleButtonStyle}"
+                                            FontSize="11" Padding="8,3" Margin="0,0,6,0" Click="SelectAll_Click" />
+                                    <Button Content="反选" Style="{DynamicResource SubtleButtonStyle}"
+                                            FontSize="11" Padding="8,3" Margin="0,0,6,0" Click="Invert_Click" />
+                                    <Button Content="刷新" Style="{DynamicResource SubtleButtonStyle}"
+                                            FontSize="11" Padding="8,3" Click="RefreshTargets_Click" />
+                                </StackPanel>
+                            </Grid>
+                        </Border>
+
+                        <Grid Grid.Column="2">
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <TextBox x:Name="CmdBox" Grid.Column="0" Style="{DynamicResource FluentTextBoxStyle}"
+                                         ToolTip="例如 ipconfig /all 或 whoami" KeyDown="CmdBox_KeyDown" />
+                                <Button Grid.Column="1" Content="执行" Style="{DynamicResource AccentButtonStyle}"
+                                        MinWidth="76" Margin="10,0,10,0" Click="ExecuteCmd_Click" />
+                                <Button Grid.Column="2" Content="清空" Style="{DynamicResource SubtleButtonStyle}"
+                                        MinWidth="66" Click="ClearOutput_Click" />
+                            </Grid>
+
+                            <WrapPanel Grid.Row="1" Margin="0,10,0,4">
+                                <Button Content="ipconfig" Tag="ipconfig /all" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="whoami" Tag="whoami" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="系统信息" Tag="systeminfo" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="磁盘" Tag="wmic logicaldisk get name,freespace,size" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="进程" Tag="tasklist" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="已装软件" Tag="wmic product get name,version" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                                <Button Content="网络连接" Tag="netstat -ano" Style="{DynamicResource SubtleButtonStyle}"
+                                        FontSize="11" Padding="8,3" Margin="0,0,6,6" Click="QuickCmd_Click" />
+                            </WrapPanel>
+
+                            <Border Grid.Row="2" Style="{DynamicResource SubtleCardStyle}" Padding="8">
+                                <TextBox x:Name="OutputBox" Style="{StaticResource MonoTextBoxStyle}"
+                                         BorderThickness="0" Background="Transparent" />
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </Grid>
+
+        <!-- 加密自检（浮层） -->
+        <Grid x:Name="TestLayer" Grid.Row="0" Grid.RowSpan="3" Visibility="Collapsed" Panel.ZIndex="21">
+            <Border Background="{DynamicResource AppBackgroundBrush}" Opacity="0.86" />
+            <Border Style="{DynamicResource CardStyle}" Width="760" MaxHeight="560"
+                    HorizontalAlignment="Center" VerticalAlignment="Center">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="LRNC-1024-AEAD 加密自检"
+                                   Style="{DynamicResource SectionHeaderStyle}" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Content="关闭" Style="{DynamicResource SubtleButtonStyle}"
+                                Click="TestClose_Click" VerticalAlignment="Top" />
+                    </Grid>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,10">
+                        <Button x:Name="RunTestButton" Content="运行全部自检"
+                                Style="{DynamicResource AccentButtonStyle}" Height="34" MinWidth="130"
+                                Click="RunTest_Click" />
+                        <TextBlock FontSize="11.5" Margin="14,0,0,0" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="480"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}"
+                                   Text="包含已知答案向量、Unicode 往返、字体覆盖、本机 TCP 回环收发四组测试。" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Style="{DynamicResource SubtleCardStyle}" Padding="8">
+                        <TextBox x:Name="TestOutputBox" Style="{StaticResource MonoTextBoxStyle}"
+                                 BorderThickness="0" Background="Transparent"
+                                 Text="点击“运行全部自检”开始检测。" />
+                    </Border>
+                </Grid>
+            </Border>
+        </Grid>
+    </Grid>
+</UserControl>

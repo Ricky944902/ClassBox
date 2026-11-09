@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
@@ -15,9 +15,9 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <!-- 程序集与产品信息 -->
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <FileVersion>1.1.0.0</FileVersion>
+    <Version>1.3.0</Version>
+    <AssemblyVersion>1.3.0.0</AssemblyVersion>
+    <FileVersion>1.3.0.0</FileVersion>
     <Company>Class Box Team</Company>
     <Product>Class Box</Product>
     <Copyright>Copyright © 2026 Class Box Team</Copyright>
@@ -40,10 +40,9 @@
   <ItemGroup>
     <ProjectReference Include="..\ClassBox.Abstractions\ClassBox.Abstractions.csproj" />
     <!-- 插件不参与编译期引用：仅保证构建顺序，产物由下方 Target 复制到 Plugins 目录 -->
-    <ProjectReference Include="..\ClassBox.Plugins.WindowTopmost\ClassBox.Plugins.WindowTopmost.csproj"
-                      ReferenceOutputAssembly="false" Private="false" />
-    <ProjectReference Include="..\ClassBox.Plugins.PresenceMonitor\ClassBox.Plugins.PresenceMonitor.csproj"
-                      ReferenceOutputAssembly="false" Private="false" />
+    <!-- 通配登记：新增 ClassBox.Plugins.* 项目后无需再改本文件 -->
+    <PluginProject Include="..\ClassBox.Plugins.*\ClassBox.Plugins.*.csproj" />
+    <ProjectReference Include="@(PluginProject)" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\ClassBox.SamplePlugin\ClassBox.SamplePlugin.csproj"
                       ReferenceOutputAssembly="false" Private="false" />
   </ItemGroup>
@@ -60,10 +59,8 @@
 
   <Target Name="CopyPluginAssembliesToOutput" AfterTargets="Build">
     <ItemGroup>
-      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.dll" />
-      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.pdb" />
-      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.dll" />
-      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.pdb" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.*\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.*.dll" />
+      <PluginBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.*\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.*.pdb" />
       <PluginBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.dll" />
       <PluginBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.pdb" />
     </ItemGroup>
@@ -74,8 +71,7 @@
 
   <Target Name="CopyPluginAssembliesToPublish" AfterTargets="Publish">
     <ItemGroup>
-      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.WindowTopmost\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.WindowTopmost.dll" />
-      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.PresenceMonitor\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.PresenceMonitor.dll" />
+      <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.Plugins.*\bin\$(Configuration)\$(TargetFramework)\ClassBox.Plugins.*.dll" />
       <PluginPublishBinaries Include="$(PluginSourceRoot)ClassBox.SamplePlugin\bin\$(Configuration)\$(TargetFramework)\ClassBox.SamplePlugin.dll" />
     </ItemGroup>
     <Copy SourceFiles="@(PluginPublishBinaries)" DestinationFolder="$(PublishDir)Plugins" SkipUnchangedFiles="true"

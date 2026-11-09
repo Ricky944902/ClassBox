@@ -1,0 +1,89 @@
+<UserControl x:Class="ClassBox.Plugins.WebBrowser.Views.WebBrowserView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid Margin="28,4,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <!-- 标题 -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="简易浏览器" Style="{DynamicResource TitleTextStyle}" />
+                <TextBlock Text="输入网址直接访问；输入关键词自动使用必应搜索"
+                           Style="{DynamicResource SubtitleTextStyle}" Margin="0,6,0,0" />
+            </StackPanel>
+            <TextBlock x:Name="StatusText" Grid.Column="1" Text="就绪"
+                       VerticalAlignment="Center"
+                       Foreground="{DynamicResource AppTextSecondaryBrush}" FontSize="12" />
+        </Grid>
+
+        <!-- 地址栏 -->
+        <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Margin="0,0,0,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <Button x:Name="BackButton" Grid.Column="0" Content="后退" Width="64"
+                        Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                        Click="Back_Click" ToolTip="返回上一页" />
+                <Button x:Name="ForwardButton" Grid.Column="1" Content="前进" Width="64"
+                        Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                        Click="Forward_Click" ToolTip="前进到下一页" />
+                <Button Grid.Column="2" Content="刷新" Width="64"
+                        Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,6,0"
+                        Click="Refresh_Click" ToolTip="重新加载当前页面" />
+                <Button Grid.Column="3" Content="主页" Width="64"
+                        Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,10,0"
+                        Click="Home_Click" ToolTip="回到必应首页" />
+
+                <TextBox x:Name="AddressBox" Grid.Column="4" Height="34"
+                         Style="{DynamicResource FluentTextBoxStyle}"
+                         KeyDown="AddressBox_KeyDown"
+                         ToolTip="输入网址（如 example.com）或搜索关键词，按回车访问" />
+
+                <Button Grid.Column="5" Content="前往" Width="72" Margin="10,0,6,0"
+                        Style="{DynamicResource AccentButtonStyle}" Click="Go_Click" />
+                <Button Grid.Column="6" Content="外部打开" Padding="14,0" Height="34"
+                        Style="{DynamicResource SubtleButtonStyle}"
+                        Click="OpenExternal_Click" ToolTip="用系统默认浏览器打开当前地址" />
+            </Grid>
+        </Border>
+
+        <!-- 错误提示 -->
+        <Border x:Name="ErrorBar" Grid.Row="2" Visibility="Collapsed"
+                Background="{DynamicResource AppLayerAltBrush}"
+                BorderBrush="{DynamicResource AppDangerBrush}" BorderThickness="1"
+                CornerRadius="8" Padding="12,8" Margin="0,0,0,10">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="&#xE783;" FontFamily="{DynamicResource IconFontFamily}"
+                           Foreground="{DynamicResource AppDangerBrush}" FontSize="14"
+                           VerticalAlignment="Center" Margin="0,0,8,0" />
+                <TextBlock x:Name="ErrorText" Text="" Foreground="{DynamicResource AppDangerBrush}"
+                           FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" />
+            </StackPanel>
+        </Border>
+
+        <!-- 浏览器主体 -->
+        <Border Grid.Row="3" Background="{DynamicResource AppLayerBrush}"
+                BorderBrush="{DynamicResource AppStrokeBrush}" BorderThickness="1" CornerRadius="10">
+            <WebBrowser x:Name="Browser" />
+        </Border>
+    </Grid>
+</UserControl>
