@@ -1,15 +1,4 @@
-﻿---
-AIGC:
-    Label: "1"
-    ContentProducer: 001191440300708461136T1XGW3
-    ProduceID: 106bc212bd0a2b7150b4feb4a98d58b1_b45dae58d84911f1bc41525400638852
-    ReservedCode1: 6MQ78d0Gm3N7UBgH1JA+0xUUzJuA0gwxWSTOMPbpqLgaCjXMObMQKSCiJ5cfiVGI3+gSCaPkIIphuV72ho+O6FXeB4qQlmvxjpYQQg0jM/sH3Jdsim4OfM0SbTrG2Hci1hfAgcKBGccuu7kc6Kx3d3E7KdsHkiybbDEne6MPzvmQZfELyoRnrJQ13kY=
-    ContentPropagator: 001191440300708461136T1XGW3
-    PropagateID: 106bc212bd0a2b7150b4feb4a98d58b1_b45dae58d84911f1bc41525400638852
-    ReservedCode2: 6MQ78d0Gm3N7UBgH1JA+0xUUzJuA0gwxWSTOMPbpqLgaCjXMObMQKSCiJ5cfiVGI3+gSCaPkIIphuV72ho+O6FXeB4qQlmvxjpYQQg0jM/sH3Jdsim4OfM0SbTrG2Hci1hfAgcKBGccuu7kc6Kx3d3E7KdsHkiybbDEne6MPzvmQZfELyoRnrJQ13kY=
----
-
-# Class Box
+﻿# Class Box
 
 .NET 8 + WPF 的插件化桌面助手。全内置功能均以插件形式实现，可随时增删插件 DLL。
 
