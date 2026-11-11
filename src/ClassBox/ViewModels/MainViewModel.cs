@@ -37,6 +37,7 @@ public sealed class MainViewModel : ObservableObject
     private readonly ISideAlertService _alerts;
 
     private readonly Dictionary<string, FrameworkElement> _pageCache = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ObservableCollection<PluginRuntime> _visiblePlugins = new();
 
     private NavItem? _selectedNavItem;
     private FrameworkElement? _currentPage;
@@ -77,7 +78,45 @@ public sealed class MainViewModel : ObservableObject
 
     public ObservableCollection<NavItem> NavItems { get; } = new();
 
-    public ReadOnlyCollection<PluginRuntime> Plugins => _pluginManager.Plugins;
+    /// <summary>当前可见的插件集合（受「显示隐藏内容」开关过滤）。</summary>
+    public ObservableCollection<PluginRuntime> Plugins => _visiblePlugins;
+
+    /// <summary>全部已加载插件（含默认隐藏项），仅供宿主内部逻辑使用。</summary>
+    public IReadOnlyList<PluginRuntime> AllPlugins => _pluginManager.Plugins;
+
+    /// <summary>是否展示默认隐藏的插件；开关状态持久化到 settings.json。</summary>
+    public bool ShowHiddenPlugins
+    {
+        get => _settings.Current.ShowHiddenPlugins;
+        set
+        {
+            if (value == _settings.Current.ShowHiddenPlugins) return;
+
+            _settings.Current.ShowHiddenPlugins = value;
+            _settings.Save();
+
+            Raise();
+            RefreshVisiblePlugins();
+            RebuildNavigation();
+        }
+    }
+
+    /// <summary>是否存在被默认隐藏的插件。</summary>
+    public bool HasHiddenPlugins => AllPlugins.Any(p => p.IsHidden);
+
+    /// <summary>插件市场标题栏下方的可见性说明。</summary>
+    public string HiddenPluginSummary
+    {
+        get
+        {
+            var hidden = AllPlugins.Count(p => p.IsHidden);
+            if (hidden == 0) return $"共 {AllPlugins.Count} 个插件，当前无默认隐藏项";
+
+            return ShowHiddenPlugins
+                ? $"共 {AllPlugins.Count} 个插件（已显示 {hidden} 个默认隐藏项）"
+                : $"共 {AllPlugins.Count} 个插件，已隐藏 {hidden} 个（默认仅展示 4 个核心插件）";
+        }
+    }
 
     public string VersionText { get; }
 
@@ -167,6 +206,7 @@ public sealed class MainViewModel : ObservableObject
 
     public void Initialize()
     {
+        RefreshVisiblePlugins();
         RebuildNavigation("dashboard");
 
         var failed = Plugins.Where(p => p.HasError).ToList();
@@ -208,8 +248,9 @@ public sealed class MainViewModel : ObservableObject
                          .OrderBy(p => p.Descriptor.Order)
                          .ThenBy(p => p.Descriptor.Title, StringComparer.OrdinalIgnoreCase))
             {
-                var runtime = Plugins.FirstOrDefault(p => p.Metadata.Id == entry.PluginId);
+                var runtime = AllPlugins.FirstOrDefault(p => p.Metadata.Id == entry.PluginId);
                 if (runtime is null || !runtime.IsEnabled) continue;
+                if (runtime.IsHidden && !ShowHiddenPlugins) continue;
 
                 NavItems.Add(new NavItem
                 {
@@ -243,6 +284,30 @@ public sealed class MainViewModel : ObservableObject
         Raise(nameof(PluginCount));
         Raise(nameof(EnabledPluginCount));
         Raise(nameof(RunningPluginCount));
+        Raise(nameof(HiddenPluginSummary));
+        Raise(nameof(HasHiddenPlugins));
+    }
+
+    /// <summary>
+    /// 按「显示隐藏内容」开关重建可见插件集合。
+    /// 默认隐藏机制在宿主侧完成，不影响插件加载、启用与页面注册。
+    /// </summary>
+    private void RefreshVisiblePlugins()
+    {
+        var showHidden = ShowHiddenPlugins;
+
+        _visiblePlugins.Clear();
+        foreach (var runtime in AllPlugins)
+        {
+            if (runtime.IsHidden && !showHidden) continue;
+            _visiblePlugins.Add(runtime);
+        }
+
+        Raise(nameof(PluginCount));
+        Raise(nameof(EnabledPluginCount));
+        Raise(nameof(RunningPluginCount));
+        Raise(nameof(HiddenPluginSummary));
+        Raise(nameof(HasHiddenPlugins));
     }
 
     private NavItem CreateCoreItem(string key, string title, string glyph)
@@ -312,6 +377,7 @@ public sealed class MainViewModel : ObservableObject
         if (ok)
         {
             _settings.SetPluginEnabled(runtime.Metadata.Id, target);
+            RefreshVisiblePlugins();
 
             _alerts.Show(new SideAlertRequest
             {

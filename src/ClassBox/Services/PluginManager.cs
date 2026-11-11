@@ -48,6 +48,9 @@ public sealed class PluginRuntime : System.ComponentModel.INotifyPropertyChanged
 
     public bool HasError => !string.IsNullOrWhiteSpace(_error);
 
+    /// <summary>是否默认隐藏在插件市场（由宿主白名单决定，与插件启用状态无关）。</summary>
+    public bool IsHidden => PluginVisibility.IsHiddenByDefault(Metadata.Id);
+
     public string StatusText => Error is not null ? "异常" : IsEnabled ? (IsRunning ? "运行中" : "已启用") : "已禁用";
 
     public event System.ComponentModel.PropertyChangedEventHandler? PropertyChanged;

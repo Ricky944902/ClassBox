@@ -12,10 +12,48 @@ namespace ClassBox.Plugins.ClassTalk.Net;
 /// </summary>
 public sealed record ChatFrame(string Kind, string Type, string Nick, byte[] Payload);
 
+/// <summary>
+/// 成员名册条目（管理员控制台的群聊管理使用）：
+/// Nick 昵称；Online 在线状态；Role 身份标识 H=房主 A=管理员 M=普通成员。
+/// </summary>
+public sealed record MemberInfo(string Nick, bool Online, string Role)
+{
+    public bool IsHost => Role == "H";
+    public bool IsAdmin => Role == "A" || Role == "H";
+}
+
 public static class ChatProtocol
 {
     public const int MaxHeaderBytes = 1024;
     public const int MaxPayloadBytes = 16 * 1024 * 1024;
+
+    /// <summary>控制帧字段分隔符（与既有 CMD/CMD_OUT 帧保持一致）。</summary>
+    public const char FieldSeparator = '\x1f';
+
+    /// <summary>控制帧记录分隔符。</summary>
+    public const char RecordSeparator = '\x1e';
+
+    /// <summary>免密钥入群 JOIN 载荷前缀：BYPASS|base64(SubjectPublicKeyInfo)。</summary>
+    public const string BypassJoinPrefix = "BYPASS|";
+
+    public static string EncodeRoster(IEnumerable<MemberInfo> members)
+        => string.Join(RecordSeparator, members.Select(m =>
+            $"{m.Nick}{FieldSeparator}{(m.Online ? 1 : 0)}{FieldSeparator}{m.Role}"));
+
+    public static List<MemberInfo> DecodeRoster(string payload)
+    {
+        var result = new List<MemberInfo>();
+        if (string.IsNullOrEmpty(payload)) return result;
+        foreach (var record in payload.Split(RecordSeparator, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = record.Split(FieldSeparator);
+            if (parts.Length < 3) continue;
+            string nick = parts[0];
+            if (nick.Length == 0) continue;
+            result.Add(new MemberInfo(nick, parts[1] == "1", parts[2]));
+        }
+        return result;
+    }
 
     /// <summary>
     /// 清理昵称中的协议分隔符与控制字符（| \n \r 等），避免帧头被破坏导致解码错位（乱码）。

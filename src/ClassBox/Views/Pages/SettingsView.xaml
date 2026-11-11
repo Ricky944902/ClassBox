@@ -77,6 +77,25 @@
                 </StackPanel>
             </Border>
 
+            <!-- 插件显示 -->
+            <Border Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+                <StackPanel>
+                    <TextBlock Text="插件显示" Style="{DynamicResource SectionHeaderStyle}" />
+                    <TextBlock Text="插件市场默认仅展示端口扫描、聊天工具、窗口置顶、人像监测 4 个核心插件，其余插件默认隐藏。开启下开关后全部显示，设置会持久保存。"
+                               FontSize="12" Margin="0,8,0,12" TextWrapping="Wrap"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Style="{DynamicResource SwitchToggleStyle}" VerticalAlignment="Center"
+                                      IsChecked="{Binding ShowHiddenPlugins, Mode=TwoWay}" />
+                        <TextBlock Text="显示隐藏内容" FontSize="12.5" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                        <TextBlock Text="{Binding HiddenPluginSummary}" FontSize="11.5" Margin="16,0,0,0"
+                                   VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
             <!-- 关于 -->
             <Border Style="{DynamicResource CardStyle}">
                 <StackPanel>

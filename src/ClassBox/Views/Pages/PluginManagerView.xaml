@@ -20,9 +20,22 @@
                 <TextBlock Text="{Binding PluginsDirectory}" FontSize="11.5" Margin="0,6,0,0"
                            TextTrimming="CharacterEllipsis"
                            Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                <TextBlock Text="{Binding HiddenPluginSummary}" FontSize="11.5" Margin="0,4,0,0"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
             </StackPanel>
 
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Border Style="{DynamicResource SubtleCardStyle}" Padding="12,7" Margin="0,0,10,0"
+                        VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal">
+                        <ToggleButton Style="{DynamicResource SwitchToggleStyle}"
+                                      IsChecked="{Binding ShowHiddenPlugins, Mode=TwoWay}"
+                                      ToolTip="开启后显示全部插件，关闭后仅显示 4 个核心插件"
+                                      VerticalAlignment="Center" />
+                        <TextBlock Text="显示隐藏内容" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </StackPanel>
+                </Border>
                 <Button Content="打开插件目录" Style="{DynamicResource FluentButtonStyle}"
                         Command="{Binding OpenPluginsFolderCommand}" Margin="0,0,8,0" />
                 <Button Content="检查更新" Style="{DynamicResource AccentButtonStyle}"

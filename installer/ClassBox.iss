@@ -1,12 +1,12 @@
-﻿; Class Box 安装程序脚本（Inno Setup 6）
+; Class Box 安装程序脚本（Inno Setup 6）
 ; 使用方式：由 build.ps1 自动调用，或手动执行
-;   ISCC.exe /DMyAppVersion=1.3.0 /DMySourceDir=..\dist\app ClassBox.iss
+;   ISCC.exe /DMyAppVersion=1.4.1 /DMySourceDir=..\dist\app ClassBox.iss
 ;
 ; 界面语言：若 installer 目录下存在 ChineseSimplified.isl（Inno 官方非官方语言包），
 ; 会自动优先使用全中文界面；否则使用内置英文语言 + 下方关键文案中文覆盖。
 
 #ifndef MyAppVersion
-  #define MyAppVersion "1.3.0"
+  #define MyAppVersion "1.4.1"
 #endif
 
 #ifndef MySourceDir

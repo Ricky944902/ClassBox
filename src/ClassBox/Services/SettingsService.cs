@@ -17,6 +17,9 @@ public sealed class AppSettings
     };
 
     public bool ShowSideAlertSound { get; set; }
+
+    /// <summary>是否在插件中心 / 侧边栏展示默认隐藏的插件（开关状态持久化）。</summary>
+    public bool ShowHiddenPlugins { get; set; }
 }
 
 /// <summary>设置读写服务。</summary>

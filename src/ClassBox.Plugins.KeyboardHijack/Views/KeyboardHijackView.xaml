@@ -1,0 +1,179 @@
+<UserControl x:Class="ClassBox.Plugins.KeyboardHijack.Views.KeyboardHijackView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             Background="Transparent">
+
+    <Grid Margin="28,4,28,20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- 顶部：标题与主操作 -->
+        <Grid Grid.Row="0" Margin="0,0,0,14">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Grid.Column="0">
+                <TextBlock Text="键盘接管" Style="{DynamicResource SectionHeaderStyle}" />
+                <TextBlock Text="按下全局快捷键，一键最小化除白名单外的所有窗口"
+                           FontSize="11.5" Margin="0,6,0,0"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <Button x:Name="BtnRestore" Content="还原上次接管" Style="{DynamicResource FluentButtonStyle}"
+                        Margin="0,0,10,0" Click="BtnRestore_Click"
+                        ToolTip="把上一次被最小化的窗口全部还原" />
+                <Button x:Name="BtnHijack" Content="立即接管" Style="{DynamicResource AccentButtonStyle}"
+                        Click="BtnHijack_Click"
+                        ToolTip="立即执行一次（等同按下快捷键）" />
+            </StackPanel>
+        </Grid>
+
+        <!-- 快捷键卡片 -->
+        <Border Grid.Row="1" Style="{DynamicResource CardStyle}" Margin="0,0,0,12">
+            <StackPanel>
+                <TextBlock Text="全局快捷键" Style="{DynamicResource SectionHeaderStyle}" />
+                <TextBlock Text="点击下方按键框后按下组合键即可录制（必须包含 Ctrl / Alt / Shift / Win 之一），Esc 取消录制。"
+                           FontSize="11.5" Margin="0,8,0,12" TextWrapping="Wrap"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border x:Name="RecordBox" Grid.Column="0" Focusable="True" MinWidth="240" Height="42"
+                            Background="{DynamicResource AppLayerAltBrush}"
+                            BorderBrush="{DynamicResource AppStrokeBrush}" BorderThickness="1"
+                            CornerRadius="10" Padding="14,0" VerticalAlignment="Center"
+                            Cursor="Hand" MouseLeftButtonDown="RecordBox_MouseLeftButtonDown"
+                            GotKeyboardFocus="RecordBox_GotKeyboardFocus"
+                            LostKeyboardFocus="RecordBox_LostKeyboardFocus"
+                            PreviewKeyDown="RecordBox_PreviewKeyDown"
+                            ToolTip="点击后按下组合键开始录制">
+                        <TextBlock x:Name="TxtHotkey" Text="Ctrl + Alt + K" FontSize="14" VerticalAlignment="Center"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="16,0,0,0">
+                        <ToggleButton x:Name="ToggleEnabled" Style="{DynamicResource SwitchToggleStyle}"
+                                      VerticalAlignment="Center" Checked="ToggleEnabled_Changed"
+                                      Unchecked="ToggleEnabled_Changed" />
+                        <TextBlock Text="启用快捷键" FontSize="12" Margin="10,0,0,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                HorizontalAlignment="Right">
+                        <Button Content="恢复默认" Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,8,0"
+                                Click="BtnResetHotkey_Click" />
+                        <Button Content="重新注册" Style="{DynamicResource FluentButtonStyle}"
+                                Click="BtnApplyHotkey_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <TextBlock x:Name="TxtHotkeyStatus" Text="未注册" FontSize="11.5" Margin="0,10,0,0"
+                           TextWrapping="Wrap"
+                           Foreground="{DynamicResource AppTextSecondaryBrush}" />
+            </StackPanel>
+        </Border>
+
+        <!-- 白名单卡片 -->
+        <Border Grid.Row="2" Style="{DynamicResource CardStyle}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+
+                <StackPanel Grid.Row="0">
+                    <TextBlock Text="保留白名单" Style="{DynamicResource SectionHeaderStyle}" />
+                    <TextBlock Text="白名单中的窗口不会被最小化。支持按「进程名」精确匹配或按「窗口标题」关键字匹配。"
+                               FontSize="11.5" Margin="0,8,0,0" TextWrapping="Wrap"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                </StackPanel>
+
+                <Grid Grid.Row="1" Margin="0,12,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <ComboBox x:Name="CmbRuleKind" Grid.Column="0" Width="120" Height="34" Margin="0,0,10,0"
+                              SelectedIndex="0" VerticalContentAlignment="Center">
+                        <ComboBoxItem Content="进程名" />
+                        <ComboBoxItem Content="标题包含" />
+                    </ComboBox>
+
+                    <TextBox x:Name="TxtRuleInput" Grid.Column="1" Height="34" Margin="0,0,10,0"
+                             Style="{DynamicResource FluentTextBoxStyle}"
+                             VerticalContentAlignment="Center" MaxLength="120"
+                             ToolTip="例如：chrome 或 腾讯会议" />
+
+                    <Button Grid.Column="2" Content="添加" Style="{DynamicResource FluentButtonStyle}"
+                            Margin="0,0,8,0" Click="BtnAddRule_Click" />
+                    <StackPanel Grid.Column="3" Orientation="Horizontal">
+                        <Button Content="捕获当前活动窗口" Style="{DynamicResource SubtleButtonStyle}" Margin="0,0,8,0"
+                                Click="BtnCapture_Click"
+                                ToolTip="把当前前台窗口的进程名加入白名单" />
+                        <Button Content="清空" Style="{DynamicResource SubtleButtonStyle}" Click="BtnClearRules_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <Border Grid.Row="2" Style="{DynamicResource SubtleCardStyle}" Padding="6">
+                    <ListBox x:Name="LstRules" Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                             ItemContainerStyle="{DynamicResource FluentListBoxItemStyle}">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Margin="2,4">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Grid.Column="0" Text="{Binding Display}" FontSize="12.5"
+                                               VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                               Foreground="{DynamicResource AppTextPrimaryBrush}" />
+                                    <Button Grid.Column="1" Content="移除" Style="{DynamicResource SubtleButtonStyle}"
+                                            Padding="10,2" FontSize="11" Click="BtnRemoveRule_Click"
+                                            Tag="{Binding}" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+                </Border>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,12,0,0">
+                    <ToggleButton x:Name="ToggleTrackRestore" Style="{DynamicResource SwitchToggleStyle}"
+                                  VerticalAlignment="Center" Checked="ToggleTrackRestore_Changed"
+                                  Unchecked="ToggleTrackRestore_Changed" />
+                    <TextBlock Text="记录被最小化的窗口以便还原" FontSize="12" Margin="10,0,24,0"
+                               VerticalAlignment="Center" Foreground="{DynamicResource AppTextPrimaryBrush}" />
+
+                    <TextBlock Text="自动还原延迟（秒，0 = 不自动）" FontSize="12" VerticalAlignment="Center"
+                               Foreground="{DynamicResource AppTextSecondaryBrush}" />
+                    <TextBox x:Name="TxtAutoRestore" Width="58" Height="30" Margin="10,0,0,0"
+                             Style="{DynamicResource FluentTextBoxStyle}" TextAlignment="Center"
+                             VerticalContentAlignment="Center" MaxLength="3" LostFocus="TxtAutoRestore_LostFocus" />
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <TextBlock x:Name="TxtSummary" Grid.Row="3" Text="" FontSize="11.5" Margin="0,12,0,0"
+                   TextWrapping="Wrap"
+                   Foreground="{DynamicResource AppTextSecondaryBrush}" />
+    </Grid>
+</UserControl>

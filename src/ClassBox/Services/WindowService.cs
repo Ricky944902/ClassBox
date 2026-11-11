@@ -19,14 +19,22 @@ public sealed class WindowService : IWindowService
 {
     private static readonly HashSet<string> IgnoredClasses = new(StringComparer.OrdinalIgnoreCase)
     {
+        // 桌面 / 任务栏 / 开始菜单 / 任务视图等 shell 容器窗口：由 explorer.exe 持有，
+        // 最小化它们只会让桌面与任务栏"消失"，因此按窗口类精确排除（不按进程名排除 explorer，
+        // 否则 CabinetWClass 文件资源管理器窗口会被一并放弃，导致"键盘接管"无法最小化资源管理器）。
         "Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd",
+        "Shell_InputSwitchTopLevelWindow", "MultitaskingViewFrame", "ForegroundStaging",
+        "TaskListThumbnailWnd", "XamlExplorerHostIslandWindow",
+        "Windows.Internal.Shell.TabProxyWindow", "TopLevelWindowForOverflowXamlIsland",
+        "ApplicationManager_DesktopShellWindow", "EdgeUiInputTopWndClass",
+        "Windows.UI.Composition.DesktopWindowContentBridge",
         "Windows.UI.Core.CoreWindow", "ApplicationFrameWindow_Cloaked",
-        "Button", "SysShadow", "ForegroundStaging", "MultitaskingViewFrame"
+        "Button", "SysShadow"
     };
 
     private static readonly HashSet<string> IgnoredProcesses = new(StringComparer.OrdinalIgnoreCase)
     {
-        "ClassBox", "explorer", "SearchHost", "StartMenuExperienceHost",
+        "ClassBox", "SearchHost", "StartMenuExperienceHost",
         "TextInputHost", "ShellExperienceHost", "LockApp", "dwm"
     };
 
@@ -278,7 +286,25 @@ public sealed class WindowService : IWindowService
     public bool Minimize(IntPtr handle)
     {
         if (!NativeMethods.IsWindow(handle)) return false;
-        return NativeMethods.ShowWindow(handle, NativeMethods.SW_SHOWMINIMIZED);
+        if (NativeMethods.IsIconic(handle)) return true;
+
+        // ① 同步最小化且不激活目标窗口：不抢焦点，也不会把目标窗口先提到前台
+        if (NativeMethods.ShowWindow(handle, NativeMethods.SW_SHOWMINNOACTIVE) && NativeMethods.IsIconic(handle))
+        {
+            return true;
+        }
+
+        // ② 兜底：目标窗口（资源管理器、浏览器等）消息循环繁忙时，同步 ShowWindow 可能被忽略，
+        //    改为投递异步消息并短暂等待，避免热键线程被目标进程阻塞。
+        NativeMethods.ShowWindowAsync(handle, NativeMethods.SW_SHOWMINNOACTIVE);
+        for (var i = 0; i < 10; i++)
+        {
+            if (NativeMethods.IsIconic(handle)) return true;
+            System.Threading.Thread.Sleep(20);
+        }
+
+        _logger.Warn($"最小化窗口失败：句柄 0x{handle.ToInt64():X}（目标窗口可能以更高完整性级别运行或被系统保护）", "Window");
+        return false;
     }
 
     public bool Restore(IntPtr handle)

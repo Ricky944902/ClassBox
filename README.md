@@ -1,4 +1,15 @@
-﻿# Class Box
+﻿---
+AIGC:
+    Label: "1"
+    ContentProducer: 001191440300708461136T1XGW3
+    ProduceID: 106bc212bd0a2b7150b4feb4a98d58b1_b45dae58d84911f1bc41525400638852
+    ReservedCode1: 6MQ78d0Gm3N7UBgH1JA+0xUUzJuA0gwxWSTOMPbpqLgaCjXMObMQKSCiJ5cfiVGI3+gSCaPkIIphuV72ho+O6FXeB4qQlmvxjpYQQg0jM/sH3Jdsim4OfM0SbTrG2Hci1hfAgcKBGccuu7kc6Kx3d3E7KdsHkiybbDEne6MPzvmQZfELyoRnrJQ13kY=
+    ContentPropagator: 001191440300708461136T1XGW3
+    PropagateID: 106bc212bd0a2b7150b4feb4a98d58b1_b45dae58d84911f1bc41525400638852
+    ReservedCode2: 6MQ78d0Gm3N7UBgH1JA+0xUUzJuA0gwxWSTOMPbpqLgaCjXMObMQKSCiJ5cfiVGI3+gSCaPkIIphuV72ho+O6FXeB4qQlmvxjpYQQg0jM/sH3Jdsim4OfM0SbTrG2Hci1hfAgcKBGccuu7kc6Kx3d3E7KdsHkiybbDEne6MPzvmQZfELyoRnrJQ13kY=
+---
+
+# Class Box
 
 .NET 8 + WPF 的插件化桌面助手。全内置功能均以插件形式实现，可随时增删插件 DLL。
 
@@ -8,15 +19,15 @@
 
 ## 1. 功能一览
 
-| 模块 | 说明 |
-| --- | --- |
-| 控制台 | 系统概览、插件状态、最近日志、常用入口 |
-| 窗口置顶与嵌入 | 枚举可见窗口，一键置顶 / 取消置顶；尝试把目标窗口嵌入本程序容器内集中查看 |
-| 人像监测 | 调用本机摄像头周期性采样，判断画面中是否有人；可配置无人提醒时长、采样间隔与触发动作 |
-| 插件管理 | 列出全部插件，启用 / 停用、热重载、打开插件数据目录 |
-| 设置 | 主题（浅色 / 深色 / 跟随系统）、开机自启、日志级别等 |
-| 侧边提示 | 统一的通知浮窗，支持自动关闭、紧急样式 |
-| 悬浮球 | 主界面一键收成桌面小球，小球与主界面均强制置顶（依赖管理员权限），单击小球还原主界面 |
+| 模块      | 说明                                         |
+| ------- | ------------------------------------------ |
+| 控制台     | 系统概览、插件状态、最近日志、常用入口                        |
+| 窗口置顶与嵌入 | 枚举可见窗口，一键置顶 / 取消置顶；尝试把目标窗口嵌入本程序容器内集中查看     |
+| 人像监测    | 调用本机摄像头周期性采样，判断画面中是否有人；可配置无人提醒时长、采样间隔与触发动作 |
+| 插件管理    | 列出全部插件，启用 / 停用、热重载、打开插件数据目录                |
+| 设置      | 主题（浅色 / 深色 / 跟随系统）、开机自启、日志级别等              |
+| 侧边提示    | 统一的通知浮窗，支持自动关闭、紧急样式                        |
+| 悬浮球     | 主界面一键收成桌面小球，小球与主界面均强制置顶（依赖管理员权限），单击小球还原主界面 |
 
 ---
 
@@ -52,10 +63,10 @@ dotnet publish src\ClassBox\ClassBox.csproj -c Release -r win-x64 `
 
 ```
 dist\
-├─ ClassBox-Setup-1.2.0.exe     # 安装包（约 64 MB，内已含运行时）
+├─ ClassBox-Setup-1.4.1.exe     # 安装包（约 64 MB，内已含运行时）
 └─ app\
    ├─ ClassBox.exe              # 自包含单文件可执行程序（约 69 MB）
-   └─ Plugins\                  # 插件目录（当前 23 个插件 DLL + 示例插件）
+   └─ Plugins\                  # 插件目录（当前 24 个插件 DLL + 示例插件）
       ├─ ClassBox.Plugins.WindowTopmost.dll
       ├─ ClassBox.Plugins.PresenceMonitor.dll
       ├─ ClassBox.Plugins.ClassTalk.dll
@@ -79,6 +90,7 @@ dist\
       ├─ ClassBox.Plugins.TodoPlanner.dll
       ├─ ClassBox.Plugins.NotesPad.dll
       ├─ ClassBox.Plugins.NetworkToolkit.dll
+      ├─ ClassBox.Plugins.KeyboardHijack.dll
       └─ ClassBox.SamplePlugin.dll
 ```
 
@@ -88,7 +100,7 @@ dist\
 
 ## 3. 安装与首次运行
 
-1. 运行 `ClassBox-Setup-1.2.0.exe`，按提示安装到 `C:\Program Files\Class Box`。
+1. 运行 `ClassBox-Setup-1.4.1.exe`，按提示安装到 `C:\Program Files\Class Box`。
 2. 程序清单要求**管理员权限**：因为需要向自身目录写入 / 删除 `Plugins` 下的插件 DLL，并支持置顶、嵌入其它进程窗口等操作。启动时会弹出 UAC，请选择“是”。
 3. 首次启动会在 `%APPDATA%\ClassBox` 建立数据目录。
 
@@ -98,12 +110,12 @@ dist\
 
 ## 4. 目录与数据
 
-| 路径 | 用途 |
-| --- | --- |
-| `%APPDATA%\ClassBox\config\settings.json` | 主程序设置 |
-| `%APPDATA%\ClassBox\logs\` | 运行日志（按日期分文件） |
-| `%APPDATA%\ClassBox\plugins\<插件Id>\` | 各插件私有数据 |
-| `<程序目录>\Plugins\` | 插件 DLL，放置即生效（重启后加载） |
+| 路径                                        | 用途                  |
+| ----------------------------------------- | ------------------- |
+| `%APPDATA%\ClassBox\config\settings.json` | 主程序设置               |
+| `%APPDATA%\ClassBox\logs\`                | 运行日志（按日期分文件）        |
+| `%APPDATA%\ClassBox\plugins\<插件Id>\`      | 各插件私有数据             |
+| `<程序目录>\Plugins\`                         | 插件 DLL，放置即生效（重启后加载） |
 
 程序内「设置 → 打开数据目录」可直接跳转。
 
@@ -165,6 +177,14 @@ context.Navigation.RegisterPage(new PluginPageDescriptor
 
 参考实现：`src\ClassBox.SamplePlugin`（最小可运行示例）。
 
+### 5.4 插件默认隐藏机制（v1.4.0）
+
+- **白名单可见**：仅「端口扫描 PortScanner」「聊天工具 ClassTalk」「窗口置顶 WindowTopmost」「人像监测 PresenceMonitor」四个插件默认在插件市场与左侧导航中展示；
+- **其余一律默认隐藏**：包括后续新增的插件，无需在插件工程内做任何标记，隐藏与否由宿主统一判定（`src\ClassBox\Services\PluginVisibility.cs` 内置白名单），插件 `Metadata` 与 `ClassBox.Abstractions` 公共契约保持不变；
+- **显示开关**：「插件」页顶部与「设置 → 插件显示」均提供「显示隐藏内容」开关，开启后被隐藏插件恢复展示，关闭则再次隐藏；
+- **开关持久化**：开关状态写入 `%APPDATA%\ClassBox\config\settings.json` 的 `ShowHiddenPlugins` 字段，重启后保持；
+- **不影响启用状态**：隐藏仅作用于展示层，插件的启用/禁用、`IsEnabled` 与已注册页面逻辑不变（导航按 `IsEnabled` 过滤，隐藏项在开关关闭时同样不进入导航）。
+
 ---
 
 ## 6. 内置插件说明
@@ -185,18 +205,27 @@ context.Navigation.RegisterPage(new PluginPageDescriptor
 - 隐私：仅在插件启用且监测开关打开时采集；关闭开关立即释放摄像头；不落盘保存任何画面；
 - 兼容性提示：若摄像头被其它程序独占（如会议软件），打开会失败并在界面显示错误。
 
+### 6.3 键盘接管（v1.4.0 新增）
+
+- **全局快捷键**：默认 `Ctrl + Alt + K`，点击按键框后直接按下组合键即可录制（必须含 Ctrl / Alt / Shift / Win 之一，Esc 取消），支持启停、恢复默认，热键状态（已注册 / 失败原因）实时显示在界面；
+- **一键接管**：热键触发或点击「立即接管」后，枚举当前所有可见且非最小化的顶层窗口，把其中非白名单窗口逐一最小化，并弹出侧边提示告知最小化数量与被保留数量；
+- **保留白名单**：支持按「进程名」精确匹配与「窗口标题」关键字匹配两种规则；「捕获当前活动窗口」可一键把前台窗口的进程名加入白名单；规则可逐条移除或清空；
+- **可选还原**：勾选「记录被最小化的窗口」后，每次接管会记录被最小化的窗口，「还原上次接管」可一键恢复；还可设置自动还原延迟（秒，0 表示不自动还原）；
+- **零依赖实现**：`RegisterHotKey / UnregisterHotKey`（消息窗口 `HWND_MESSAGE` 接收 `WM_HOTKEY`）、`GetForegroundWindow`、`IsIconic`、`IsWindowVisible`，窗口枚举与最小化统一走宿主 `IWindowService`，插件内不做窗口操作 P/Invoke；
+- **生命周期安全**：热键在 `OnStartAsync` 注册，插件停止 / 被禁用 / 释放时注销并释放消息窗口，避免热键泄漏。
+
 ---
 
 ## 7. 常见问题
 
-| 现象 | 处理 |
-| --- | --- |
-| 启动每次都弹 UAC | 正常，程序清单为 `requireAdministrator`；如需免提示可改用计划任务以最高权限启动，但会改变安全边界 |
-| 杀软报毒 | 单文件自解压 + 反射加载插件易被启发式误判，添加信任或改为框架依赖发布验证 |
-| 插件列表为空 | 确认 `Plugins` 目录与 `ClassBox.exe` 同级；查看日志 `%APPDATA%\ClassBox\logs` 中的加载错误 |
-| 摄像头打不开 | 检查是否被其它程序占用；Windows 设置 → 隐私 → 相机 中允许桌面应用访问 |
+| 现象                | 处理                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------- |
+| 启动每次都弹 UAC        | 正常，程序清单为 `requireAdministrator`；如需免提示可改用计划任务以最高权限启动，但会改变安全边界                                            |
+| 杀软报毒              | 单文件自解压 + 反射加载插件易被启发式误判，添加信任或改为框架依赖发布验证                                                                  |
+| 插件列表为空            | 确认 `Plugins` 目录与 `ClassBox.exe` 同级；查看日志 `%APPDATA%\ClassBox\logs` 中的加载错误                                |
+| 摄像头打不开            | 检查是否被其它程序占用；Windows 设置 → 隐私 → 相机 中允许桌面应用访问                                                              |
 | 安装包编译失败提示缺少中文语言文件 | 本仓库默认使用 Inno 内置英文语言并中文覆盖关键文案；如需全中文向导，将官方简体中文语言包命名为 `ChineseSimplified.isl` 放入 `installer\` 目录，脚本会自动优先使用 |
-| 想减小体积 | 使用 `-FrameworkDependent`（体积约 1–2 MB，但目标机需装 .NET 8 桌面运行时） |
+| 想减小体积             | 使用 `-FrameworkDependent`（体积约 1–2 MB，但目标机需装 .NET 8 桌面运行时）                                                |
 
 ---
 
@@ -211,6 +240,7 @@ ClassBox\
 │  ├─ ClassBox\                  # 主程序：WPF 外壳、插件宿主、DI、日志、窗口服务
 │  ├─ ClassBox.Plugins.WindowTopmost\
 │  ├─ ClassBox.Plugins.PresenceMonitor\
+│  ├─ ClassBox.Plugins.KeyboardHijack\
 │  └─ ClassBox.SamplePlugin\     # 插件开发示例
 ├─ installer\ClassBox.iss        # Inno Setup 脚本
 ├─ docs\验收清单.md
@@ -236,12 +266,12 @@ ClassBox\
 
 ### 10.3 相关代码
 
-| 文件 | 职责 |
-| --- | --- |
-| `src\ClassBox\Views\FloatingBallWindow.xaml(.cs)` | 小球窗口：拖动、单击还原、右键菜单、置顶守卫 |
-| `src\ClassBox\MainWindow.xaml(.cs)` | `Topmost`、标题栏球形按钮、`CollapseToBall()` / `ShowFromBall()`、关闭联动 |
-| `src\ClassBox\Services\WindowService.cs` | `StartTopmostGuard()` / `StopTopmostGuard()`（带句柄失效自动停止） |
-| `src\ClassBox\App.xaml.cs` | 启动时 `AttachWindowService()` 注入窗口服务并启用置顶 |
+| 文件                                                | 职责                                                           |
+| ------------------------------------------------- | ------------------------------------------------------------ |
+| `src\ClassBox\Views\FloatingBallWindow.xaml(.cs)` | 小球窗口：拖动、单击还原、右键菜单、置顶守卫                                       |
+| `src\ClassBox\MainWindow.xaml(.cs)`               | `Topmost`、标题栏球形按钮、`CollapseToBall()` / `ShowFromBall()`、关闭联动 |
+| `src\ClassBox\Services\WindowService.cs`          | `StartTopmostGuard()` / `StopTopmostGuard()`（带句柄失效自动停止）      |
+| `src\ClassBox\App.xaml.cs`                        | 启动时 `AttachWindowService()` 注入窗口服务并启用置顶                      |
 
 ---
 
@@ -255,11 +285,27 @@ ClassBox\
 
 ## 11. 变更记录
 
+### v1.4.1（2026-11-11）
+
+- **修复「接管键盘」无法最小化资源管理器**：根因在宿主 `WindowService` 的进程名过滤表 `IgnoredProcesses` 中包含 `explorer`，导致文件资源管理器窗口（`CabinetWClass` / `ExploreWClass`）在枚举阶段就被整体排除，热键触发时从未进入最小化列表；现将过滤方式由「按进程名排除 explorer」改为「按窗口类精确排除桌面 / 任务栏 / 开始菜单等 shell 容器窗口」（`Progman`、`WorkerW`、`Shell_TrayWnd`、`Shell_SecondaryTrayWnd`、`Shell_InputSwitchTopLevelWindow`、`MultitaskingViewFrame`、`ForegroundStaging`、`TaskListThumbnailWnd`、`XamlExplorerHostIslandWindow`、`Windows.Internal.Shell.TabProxyWindow`、`TopLevelWindowForOverflowXamlIsland`、`ApplicationManager_DesktopShellWindow`、`EdgeUiInputTopWndClass`、`Windows.UI.Composition.DesktopWindowContentBridge` 等），资源管理器常规窗口与浏览器、Office 等常规可最小化顶层窗口均可被接管；
+- **最小化改为「不抢焦点 + 异步兜底」**：`IWindowService.Minimize` 改用 `SW_SHOWMINNOACTIVE`（最小化且不激活目标窗口），并在目标窗口消息循环繁忙、同步调用被忽略时自动改用 `ShowWindowAsync` 并短暂校验 `IsIconic`，失败时输出告警日志说明可能的跨权限 / 受保护原因；
+- **端到端验证**：以真实资源管理器窗口 + 2 个测试窗口 + 1 个白名单窗口 + 宿主自身窗口，通过真实按下 `Ctrl + Alt + K` 验证：资源管理器 `IsIconic` 由 `False` 变为 `True`、白名单窗口与自身窗口不受影响、桌面与任务栏 shell 容器未被最小化、一键还原后资源管理器恢复，全部断言通过；
+- **重新打包**：程序与安装包版本号统一为 1.4.1（`ClassBox.exe` 单文件自包含、安装包 `ClassBox-Setup-1.4.1.exe`）。
+
+### v1.4.0（2026-11-11）
+
+- **插件默认隐藏机制**：宿主新增 `PluginVisibility` 判定，仅「端口扫描」「聊天工具」「窗口置顶」「人像监测」四个插件默认展示，其余 20 个插件及后续新增插件默认隐藏；插件市场与左侧导航同步过滤；
+- **显示隐藏内容开关**：「插件」页顶部与「设置 → 插件显示」新增开关，开启后显示被隐藏插件，状态持久化到 `settings.json` 的 `ShowHiddenPlugins`，重启保持；不改动 `ClassBox.Abstractions` 既有成员与插件加载契约；
+- **聊天工具群聊管理**：ClassTalk 管理员面板新增成员名册与「踢出成员 / 授予管理员 / 取消管理员」操作，服务端 `TryAdminOp` 仅允许管理员执行并广播名册变化；
+- ** 免密钥入群**：加入房间时在加密口令框输入，经 RSA-OAEP 加密通道向主机申请，主机校验后直接放行（无需房间口令）并授予管理员权限；已入群成员输入  亦可呼出管理员面板；
+- **新增「接管键盘」插件**：全局快捷键一键最小化除白名单外所有窗口，支持白名单（进程名 / 标题关键字 / 捕获当前活动窗口）、可选记录并还原被最小化窗口、自动还原延迟、快捷键录制与启停、恢复默认；零第三方依赖，退出时注销热键；
+- **重新打包**：程序与安装包版本号统一为 1.4.0（`ClassBox.exe` 单文件自包含、安装包 `ClassBox-Setup-1.4.0.exe`，`Plugins` 目录 24 个插件 DLL + 示例插件）。
+
 ### v1.3.0（2026-11-09）
 
 - **ClassTalk 隐藏管理入口**：删除聊天页可见的「管理员」按钮与相关提示文案，普通用户界面不再出现任何管理员相关内容；管理员控制台改为浮层，仅在口令触发后出现。
-- **口令触发控制台**：在聊天输入框发送 `/admin` 即打开控制台（该指令不会作为聊天内容发给他人）；本机已是管理员时直接打开，尚无管理员时先到先得竞选，已被他人持有时给出提示。
-- **加密口令框支持 `/admin`**：聊天页「加密口令」输入框内输入 `/admin` 并确认，即成为当前房间管理员（主机侧本地登记，成员侧经加密通道向主机申请）；口令框本身始终回显房间口令，不影响原口令校验；成为管理员后在该处再次输入 `/admin` 可随时呼出控制台。
+- **口令触发控制台**：在聊天输入框发送 即打开控制台（该指令不会作为聊天内容发给他人）；本机已是管理员时直接打开，尚无管理员时先到先得竞选，已被他人持有时给出提示。
+- **加密口令框支持 **：聊天页「加密口令」输入框内输入 ` 并确认，即成为当前房间管理员（主机侧本地登记，成员侧经加密通道向主机申请）；口令框本身始终回显房间口令，不影响原口令校验；成为管理员后在该处再次输入   可随时呼出控制台。
 - **局域网会话检测**：新增会话发现能力（UDP 55211 广播 + TTL 清理），登录页实时列出局域网内正在进行的 ClassTalk 会话（会话名、主机、端口、在线人数、是否加密），支持手动刷新、自动刷新开关与一键加入；主机侧随房间启停自动开始/停止公告。
 - **重新打包**：程序与安装包版本号统一为 1.3.0（`ClassBox.exe` 单文件自包含、安装包 `ClassBox-Setup-1.3.0.exe`）。
 
@@ -279,4 +325,4 @@ ClassBox\
 
 - 首个可分发版本：插件式框架（宿主 + `ClassBox.Abstractions` 契约）、内置「窗口置顶」与「人像监测」插件、Inno Setup 安装包。
 
-*（内容由AI生成，仅供参考）*
+

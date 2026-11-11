@@ -22,6 +22,8 @@ internal static class NativeMethods
     public const int SW_SHOWMINIMIZED = 2;
     public const int SW_SHOWMAXIMIZED = 3;
     public const int SW_SHOWNOACTIVATE = 4;
+    /// <summary>最小化且不激活目标窗口（不抢焦点，最适合"一键最小化其它窗口"）。</summary>
+    public const int SW_SHOWMINNOACTIVE = 7;
     public const int SW_RESTORE = 9;
 
     public const uint SWP_NOSIZE = 0x0001;
@@ -95,6 +97,11 @@ internal static class NativeMethods
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    /// <summary>异步版本：只投递显示状态变更，不等待目标线程，避免目标窗口卡顿导致热键线程被阻塞。</summary>
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static extern bool ShowWindowAsync(IntPtr hWnd, int nCmdShow);
 
     [DllImport("user32.dll", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]

@@ -14,19 +14,19 @@
     <ApplicationIcon>Assets\ClassBox.ico</ApplicationIcon>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
-    <!-- 程序集与产品信息 -->
-    <Version>1.3.0</Version>
-    <AssemblyVersion>1.3.0.0</AssemblyVersion>
-    <FileVersion>1.3.0.0</FileVersion>
+    <!-- �������Ʒ��Ϣ -->
+    <Version>1.4.1</Version>
+    <AssemblyVersion>1.4.1.0</AssemblyVersion>
+    <FileVersion>1.4.1.0</FileVersion>
     <Company>Class Box Team</Company>
     <Product>Class Box</Product>
-    <Copyright>Copyright © 2026 Class Box Team</Copyright>
-    <Description>Class Box —— 一切皆插件的现代 Windows 桌面效率工具箱</Description>
+    <Copyright>Copyright ? 2026 Class Box Team</Copyright>
+    <Description>Class Box ���� һ�нԲ�����ִ� Windows ����Ч�ʹ�����</Description>
     <NeutralLanguage>zh-Hans</NeutralLanguage>
 
-    <!-- 无第三方 NuGet 依赖：仅使用 BCL + WPF + 内置 Windows SDK 投影 -->
+    <!-- �޵����� NuGet ��������ʹ�� BCL + WPF + ���� Windows SDK ͶӰ -->
 
-    <!-- 发布相关默认值：实际发布参数由 build.ps1 显式传入 -->
+    <!-- �������Ĭ��ֵ��ʵ�ʷ��������� build.ps1 ��ʽ���� -->
     <SelfContained Condition="'$(SelfContained)' == ''">true</SelfContained>
     <PublishSingleFile Condition="'$(PublishSingleFile)' == ''">true</PublishSingleFile>
     <PublishReadyToRun Condition="'$(PublishReadyToRun)' == ''">false</PublishReadyToRun>
@@ -39,8 +39,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ClassBox.Abstractions\ClassBox.Abstractions.csproj" />
-    <!-- 插件不参与编译期引用：仅保证构建顺序，产物由下方 Target 复制到 Plugins 目录 -->
-    <!-- 通配登记：新增 ClassBox.Plugins.* 项目后无需再改本文件 -->
+    <!-- �����������������ã�����֤����˳�򣬲������·� Target ���Ƶ� Plugins Ŀ¼ -->
+    <!-- ͨ��Ǽǣ����� ClassBox.Plugins.* ��Ŀ�������ٸı��ļ� -->
     <PluginProject Include="..\ClassBox.Plugins.*\ClassBox.Plugins.*.csproj" />
     <ProjectReference Include="@(PluginProject)" ReferenceOutputAssembly="false" Private="false" />
     <ProjectReference Include="..\ClassBox.SamplePlugin\ClassBox.SamplePlugin.csproj"
@@ -51,7 +51,7 @@
     <Resource Include="Assets\ClassBox.ico" />
   </ItemGroup>
 
-  <!-- 把插件 DLL 复制到输出目录的 Plugins 子目录（构建与发布两条路径） -->
+  <!-- �Ѳ�� DLL ���Ƶ����Ŀ¼�� Plugins ��Ŀ¼�������뷢������·���� -->
   <PropertyGroup>
     <PluginSourceRoot>$(MSBuildThisFileDirectory)..\</PluginSourceRoot>
     <PluginBinaryDir>$(PluginSourceRoot)$(PluginProjectName)\bin\$(Configuration)\$(TargetFramework)\</PluginBinaryDir>
@@ -66,7 +66,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(PluginBinaries)" DestinationFolder="$(OutDir)Plugins" SkipUnchangedFiles="true"
           Condition="Exists('%(PluginBinaries.Identity)')" ContinueOnError="true" />
-    <Message Importance="high" Text="Class Box: 已同步插件到 $(OutDir)Plugins" />
+    <Message Importance="high" Text="Class Box: ��ͬ������� $(OutDir)Plugins" />
   </Target>
 
   <Target Name="CopyPluginAssembliesToPublish" AfterTargets="Publish">
@@ -76,7 +76,7 @@
     </ItemGroup>
     <Copy SourceFiles="@(PluginPublishBinaries)" DestinationFolder="$(PublishDir)Plugins" SkipUnchangedFiles="true"
           Condition="Exists('%(PluginPublishBinaries.Identity)')" ContinueOnError="true" />
-    <Message Importance="high" Text="Class Box: 已同步插件到 $(PublishDir)Plugins" />
+    <Message Importance="high" Text="Class Box: ��ͬ������� $(PublishDir)Plugins" />
   </Target>
 
 </Project>

